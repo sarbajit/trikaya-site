@@ -1,6 +1,9 @@
 import { Schema, model, models, type Document, type Model, type Types } from "mongoose";
 
-export type UserRole = "customer" | "admin";
+// "agent" exists for session-type completeness only — an agent identity actually
+// lives in models/Agent.ts (a standalone collection, no FK to User). No code path
+// sets role: "agent" on a User document.
+export type UserRole = "customer" | "agent" | "admin";
 
 export interface IGdprConsent {
   version: string;
@@ -15,6 +18,7 @@ export interface IUser extends Document {
   phone?: string;
   passwordHash?: string;
   role: UserRole;
+  emailVerified?: Date | null;
   gdprConsent?: IGdprConsent;
   createdAt: Date;
   updatedAt: Date;
@@ -35,7 +39,8 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     phone: { type: String, trim: true },
     passwordHash: { type: String },
-    role: { type: String, enum: ["customer", "admin"], required: true, default: "customer" },
+    role: { type: String, enum: ["customer", "agent", "admin"], required: true, default: "customer" },
+    emailVerified: { type: Date, default: null },
     gdprConsent: { type: GdprConsentSchema },
   },
   { timestamps: true }

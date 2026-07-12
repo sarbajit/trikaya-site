@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { connectDB } from "@/lib/db";
 import { getSiteSettings } from "@/models/SiteSettings";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Trikaya",
@@ -33,7 +34,9 @@ export default async function RootLayout({
 
   return (
     <html lang="en" style={themeVars}>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
