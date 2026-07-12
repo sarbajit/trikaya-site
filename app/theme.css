@@ -1,0 +1,11 @@
+:root {
+  --color-primary: #1e3a8a;
+  --color-secondary: #f59e0b;
+  --color-accent: #10b981;
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+}
