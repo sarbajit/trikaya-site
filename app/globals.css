@@ -2,6 +2,6 @@
 @import "./theme.css";
 
 body {
-  color: #171717;
-  background: #ffffff;
+  color: var(--color-foreground);
+  background: var(--color-background);
 }

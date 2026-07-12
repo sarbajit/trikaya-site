@@ -1,11 +1,48 @@
 :root {
+  /* Brand tokens - driven by SiteSettings (see app/layout.tsx); these are the
+     only colors CLAUDE.md Tier 1 allows to vary per-tenant. */
   --color-primary: #1e3a8a;
   --color-secondary: #f59e0b;
   --color-accent: #10b981;
+  --color-primary-foreground: #ffffff;
+  --color-secondary-foreground: #ffffff;
+  --color-accent-foreground: #ffffff;
+
+  /* Neutral tokens for shadcn/ui primitives (components/ui/*) - fixed, not brand-configurable. */
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: var(--color-primary);
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
 }
 
 @theme inline {
   --color-primary: var(--color-primary);
   --color-secondary: var(--color-secondary);
   --color-accent: var(--color-accent);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-secondary-foreground: var(--color-secondary-foreground);
+  --color-accent-foreground: var(--color-accent-foreground);
+
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-card: var(--color-card);
+  --color-card-foreground: var(--color-card-foreground);
+  --color-popover: var(--color-popover);
+  --color-popover-foreground: var(--color-popover-foreground);
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-foreground);
+  --color-border: var(--color-border);
+  --color-input: var(--color-input);
+  --color-ring: var(--color-ring);
+  --color-destructive: var(--color-destructive);
+  --color-destructive-foreground: var(--color-destructive-foreground);
 }

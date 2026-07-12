@@ -20,6 +20,7 @@ Full requirements live in `/docs/PROJECT_SPEC.md`. Read the relevant section the
 
 ## Stack Reminders
 - Next.js App Router + TypeScript strict mode. Mongoose with a cached connection helper (serverless-safe). NextAuth (Auth.js) for auth with `customer | agent | admin` roles. Tailwind with theme tokens driven by admin settings. Razorpay, Cloudinary, Resend/SendGrid — client init helpers live in `/lib`.
+- UI components: shadcn/ui (Radix + Tailwind). Primitives live in `components/ui/*` and are authored/extended in place (not an opaque npm package) — reuse them for every new page/form instead of hand-rolled markup. Brand tokens (`--color-primary/secondary/accent`) are aliased into the shadcn semantic tokens in `app/theme.css`, so default-variant components already reflect `SiteSettings` automatically.
 
 ## Known Constraint
 - Direct OTA (Booking.com/MakeMyTrip) APIs are not available to individual properties. OTA sync integrates with a channel-manager API via the `ChannelManagerAdapter` interface (see spec §5.6) — do not attempt to build a direct Booking.com/MMT integration.
