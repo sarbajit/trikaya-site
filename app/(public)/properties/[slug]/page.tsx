@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { MapPin, CalendarClock } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { connectDB } from "@/lib/db";
 import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
@@ -12,7 +12,9 @@ import { PoliciesSection } from "../../_components/PoliciesSection";
 import { MapPlaceholder } from "../../_components/MapPlaceholder";
 import { ReviewsSection } from "../../_components/ReviewsSection";
 import { SectionDivider } from "../../_components/SectionDivider";
+import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
+import { BookingWidget } from "@/components/BookingWidget";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -132,17 +134,23 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           </section>
         </div>
 
-        <aside className="h-fit rounded-md border border-border bg-card p-5 lg:sticky lg:top-24">
-          <p className="flex items-center gap-2 font-display text-lg text-foreground">
-            <CalendarClock className="size-4 text-primary" /> Check availability
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Live availability and instant booking open in a later phase — for now, browse rooms and rates above.
-          </p>
-          <div className="mt-4 rounded-md border border-dashed border-border bg-muted/40 px-4 py-6 text-center text-sm text-muted-foreground">
-            Booking opens soon
-          </div>
-        </aside>
+        <Suspense
+          fallback={
+            <aside className="h-fit rounded-md border border-border bg-card p-5 lg:sticky lg:top-24">
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            </aside>
+          }
+        >
+          <BookingWidget
+            rooms={rooms.map((room) => ({
+              id: room._id.toString(),
+              name: room.name,
+              maxOccupancy: room.maxOccupancy,
+              pricingModel: room.pricingModel,
+              basePriceB2C: room.basePriceB2C,
+            }))}
+          />
+        </Suspense>
       </div>
     </div>
   );

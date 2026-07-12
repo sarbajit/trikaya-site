@@ -1,6 +1,13 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Users } from "lucide-react";
 import { PropertyImage } from "./PropertyImage";
 import { Button } from "@/components/ui/button";
+
+/** Custom event RoomTypeCard broadcasts on "Select"; BookingWidget listens for it. */
+export const SELECT_ROOM_EVENT = "trikaya:select-room";
 
 export interface RoomTypeCardData {
   id: string;
@@ -11,6 +18,36 @@ export interface RoomTypeCardData {
 }
 
 export function RoomTypeCard({ room, propertySlug }: { room: RoomTypeCardData; propertySlug: string }) {
+  const { status } = useSession();
+  const router = useRouter();
+
+  function handleSelect() {
+    // Session status starts as "loading" for a moment on first paint; acting
+    // before it resolves could send a logged-out user straight to the
+    // property page instead of the login page. The button stays disabled
+    // until status is known, so this is just a defensive guard.
+    if (status === "loading") return;
+
+    const propertyUrl = `/properties/${propertySlug}?room=${room.id}#booking-widget`;
+
+    if (status === "unauthenticated") {
+      router.push(`/login?callbackUrl=${encodeURIComponent(propertyUrl)}`);
+      return;
+    }
+
+    // Already on the property page (booking widget present in the DOM): just
+    // select in place. Otherwise (e.g. the single-property homepage, which
+    // has no booking widget of its own) navigate to the property page.
+    const widget = document.getElementById("booking-widget");
+    if (widget) {
+      window.dispatchEvent(new CustomEvent(SELECT_ROOM_EVENT, { detail: room.id }));
+      widget.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    router.push(propertyUrl);
+  }
+
   return (
     <div className="grid gap-4 rounded-md border border-border bg-card p-3 sm:grid-cols-[10rem_1fr_auto] sm:items-center sm:p-4">
       <PropertyImage
@@ -32,7 +69,7 @@ export function RoomTypeCard({ room, propertySlug }: { room: RoomTypeCardData; p
             / {room.pricingModel === "per_night" ? "night" : "person / night"}
           </span>
         </div>
-        <Button size="sm" disabled title="Booking opens in a later phase">
+        <Button size="sm" onClick={handleSelect} disabled={status === "loading"}>
           Select
         </Button>
       </div>
