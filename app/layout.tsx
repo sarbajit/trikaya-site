@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "QuickTrails",
-  description: "Book hotels, resorts, and homestays with QuickTrails.",
+  title: "Trikaya",
+  description: "Book hotels, resorts, and homestays with Trikaya.",
 };
 
 export default function RootLayout({

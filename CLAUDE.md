@@ -1,4 +1,4 @@
-# CLAUDE.md — QuickTrails Booking Platform
+# CLAUDE.md — Trikaya Booking Platform
 
 Full requirements live in `/docs/PROJECT_SPEC.md`. Read the relevant section there before starting a phase — do not guess at requirements this file doesn't cover.
 
