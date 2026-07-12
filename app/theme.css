@@ -22,6 +22,12 @@
   --color-ring: var(--color-primary);
   --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
+
+  /* Type system: an editorial serif for display/headings (heritage-travel
+     register) paired with a plain system sans for body/UI, so the page
+     reads like a travel journal rather than a generic SaaS product. */
+  --font-display: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 @theme inline {
@@ -45,4 +51,7 @@
   --color-ring: var(--color-ring);
   --color-destructive: var(--color-destructive);
   --color-destructive-foreground: var(--color-destructive-foreground);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
 }

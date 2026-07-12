@@ -4,4 +4,38 @@
 body {
   color: var(--color-foreground);
   background: var(--color-background);
+  font-family: var(--font-sans);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-slot="dialog-overlay"][data-state="open"] {
+    animation: dialog-overlay-in 180ms ease-out;
+  }
+  [data-slot="dialog-content"][data-state="open"] {
+    animation: dialog-content-in 180ms ease-out;
+  }
+
+  @keyframes dialog-overlay-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes dialog-content-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.97);
+    }
+  }
+
+  .animate-fade-up {
+    animation: fade-up 500ms ease-out both;
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
 }

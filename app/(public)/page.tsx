@@ -1,8 +1,22 @@
-export default function HomePage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <h1 className="text-4xl font-semibold text-primary">Trikaya</h1>
-      <p className="text-secondary">Coming soon.</p>
-    </main>
-  );
+import { resolveHomepageMode } from "@/lib/homepage-mode";
+import { SinglePropertyHome } from "./_components/home/SinglePropertyHome";
+import { PortfolioHome } from "./_components/home/PortfolioHome";
+import { PortalHome } from "./_components/home/PortalHome";
+import { EmptyHome } from "./_components/home/EmptyHome";
+
+export const revalidate = 60;
+
+export default async function HomePage() {
+  const mode = await resolveHomepageMode();
+
+  switch (mode) {
+    case "single":
+      return <SinglePropertyHome />;
+    case "portfolio":
+      return <PortfolioHome />;
+    case "portal":
+      return <PortalHome />;
+    default:
+      return <EmptyHome />;
+  }
 }
