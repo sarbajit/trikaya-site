@@ -18,12 +18,16 @@ export const authConfig: NextAuthConfig = {
       if (user) {
         token.id = user.id as string;
         token.role = user.role;
+        token.approved = user.approved;
+        token.agentStatus = user.agentStatus;
       }
       return token;
     },
     session({ session, token }) {
       session.user.id = token.id;
       session.user.role = token.role;
+      session.user.approved = token.approved;
+      session.user.agentStatus = token.agentStatus;
       return session;
     },
     authorized({ auth, request }) {
@@ -32,6 +36,14 @@ export const authConfig: NextAuthConfig = {
 
       if (request.nextUrl.pathname.startsWith("/api/admin")) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      if (request.nextUrl.pathname.startsWith("/agent/dashboard")) {
+        if (auth?.user?.role === "agent") return true;
+
+        const agentLoginUrl = new URL("/agent/login", request.url);
+        agentLoginUrl.searchParams.set("callbackUrl", request.url);
+        return NextResponse.redirect(agentLoginUrl);
       }
 
       const signInUrl = new URL("/login", request.url);

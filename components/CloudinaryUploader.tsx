@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import Image from "next/image";
-import { Upload, X } from "lucide-react";
+import { Upload, X, FileText } from "lucide-react";
 import type { UploadFolder } from "@/lib/uploadFolders";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,9 +12,18 @@ interface CloudinaryUploaderProps {
   value?: string;
   onChange: (url: string) => void;
   label?: string;
+  accept?: string;
+  resourceType?: "image" | "auto";
 }
 
-export function CloudinaryUploader({ folder, value, onChange, label }: CloudinaryUploaderProps) {
+export function CloudinaryUploader({
+  folder,
+  value,
+  onChange,
+  label,
+  accept = "image/*",
+  resourceType = "image",
+}: CloudinaryUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -43,7 +52,7 @@ export function CloudinaryUploader({ folder, value, onChange, label }: Cloudinar
       formData.append("folder", folder);
 
       const uploadResponse = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
         { method: "POST", body: formData }
       );
       if (!uploadResponse.ok) throw new Error("Upload failed");
@@ -61,15 +70,26 @@ export function CloudinaryUploader({ folder, value, onChange, label }: Cloudinar
     <div className="flex flex-col gap-2">
       {label && <Label>{label}</Label>}
       <div className="flex items-center gap-3">
-        {value && (
+        {value && resourceType === "image" && (
           <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-input">
             <Image src={value} alt={label ?? "Uploaded image"} fill className="object-cover" />
           </div>
         )}
+        {value && resourceType === "auto" && (
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-md border border-input px-2 py-1.5 text-sm text-foreground underline"
+          >
+            <FileText className="size-4 shrink-0" />
+            View uploaded file
+          </a>
+        )}
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={accept}
           onChange={handleFileChange}
           disabled={isUploading}
           className="hidden"
@@ -82,7 +102,7 @@ export function CloudinaryUploader({ folder, value, onChange, label }: Cloudinar
           onClick={() => inputRef.current?.click()}
         >
           <Upload />
-          {isUploading ? "Uploading..." : value ? "Replace" : "Upload image"}
+          {isUploading ? "Uploading..." : value ? "Replace" : "Upload"}
         </Button>
         {value && (
           <Button type="button" variant="ghost" size="sm" onClick={() => onChange("")}>

@@ -39,6 +39,8 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         if (result.code === "email-not-verified") {
           setErrorMessage("Please verify your email address before logging in.");
           setShowResend(true);
+        } else if (result.code === "agent-suspended") {
+          setErrorMessage("This account has been suspended. Contact us for details.");
         } else {
           setErrorMessage("Invalid email or password.");
         }

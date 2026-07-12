@@ -3,6 +3,7 @@ import { Schema, model, models, type Document, type Model, type Types } from "mo
 export interface IConsentLog extends Document {
   _id: Types.ObjectId;
   userId?: Types.ObjectId;
+  agentId?: Types.ObjectId;
   sessionId?: string;
   consentType: string;
   granted: boolean;
@@ -12,6 +13,7 @@ export interface IConsentLog extends Document {
 
 const ConsentLogSchema = new Schema<IConsentLog>({
   userId: { type: Schema.Types.ObjectId, ref: "User", index: true },
+  agentId: { type: Schema.Types.ObjectId, ref: "Agent", index: true },
   sessionId: { type: String, index: true },
   consentType: { type: String, required: true },
   granted: { type: Boolean, required: true },

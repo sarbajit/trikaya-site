@@ -1,6 +1,9 @@
 import { Resend } from "resend";
 import { verifyEmailTemplate } from "@/emails/verifyEmail";
 import { passwordResetTemplate } from "@/emails/passwordReset";
+import { agentRegisteredTemplate } from "@/emails/agentRegistered";
+import { agentStatusChangedTemplate } from "@/emails/agentStatusChanged";
+import type { AgentStatus } from "@/models/Agent";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -30,5 +33,35 @@ export async function sendVerificationEmail(params: { to: string; name: string; 
 
 export async function sendPasswordResetEmail(params: { to: string; name: string; url: string }): Promise<void> {
   const { subject, html } = passwordResetTemplate({ name: params.name, url: params.url });
+  await send(params.to, subject, html);
+}
+
+export async function sendAgentRegisteredAdminEmail(params: {
+  to: string;
+  businessName: string;
+  contactPerson: string;
+  email: string;
+  reviewUrl: string;
+}): Promise<void> {
+  const { subject, html } = agentRegisteredTemplate({
+    businessName: params.businessName,
+    contactPerson: params.contactPerson,
+    email: params.email,
+    reviewUrl: params.reviewUrl,
+  });
+  await send(params.to, subject, html);
+}
+
+export async function sendAgentStatusChangedEmail(params: {
+  to: string;
+  contactPerson: string;
+  status: Exclude<AgentStatus, "pending">;
+  loginUrl: string;
+}): Promise<void> {
+  const { subject, html } = agentStatusChangedTemplate({
+    contactPerson: params.contactPerson,
+    status: params.status,
+    loginUrl: params.loginUrl,
+  });
   await send(params.to, subject, html);
 }

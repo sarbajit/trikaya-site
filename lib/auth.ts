@@ -5,10 +5,15 @@ import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
+import { Agent } from "@/models/Agent";
 import { createPendingOAuthSignup } from "@/lib/oauth-signup-tokens";
 
 class EmailNotVerifiedError extends CredentialsSignin {
   code = "email-not-verified";
+}
+
+class AgentSuspendedError extends CredentialsSignin {
+  code = "agent-suspended";
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -26,20 +31,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         await connectDB();
         const user = await User.findOne({ email });
-        if (!user || !user.passwordHash) return null;
+        if (user && user.passwordHash) {
+          const isValid = await bcrypt.compare(password, user.passwordHash);
+          if (!isValid) return null;
 
-        const isValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isValid) return null;
+          if (!user.emailVerified) {
+            throw new EmailNotVerifiedError();
+          }
 
-        if (!user.emailVerified) {
-          throw new EmailNotVerifiedError();
+          return {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          };
+        }
+
+        const agent = await Agent.findOne({ email });
+        if (!agent) return null;
+
+        const isAgentPasswordValid = await bcrypt.compare(password, agent.passwordHash);
+        if (!isAgentPasswordValid) return null;
+
+        if (agent.status === "suspended") {
+          throw new AgentSuspendedError();
         }
 
         return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          role: user.role,
+          id: agent._id.toString(),
+          name: agent.contactPerson,
+          email: agent.email,
+          role: "agent",
+          approved: agent.status === "approved",
+          agentStatus: agent.status,
         };
       },
     }),
