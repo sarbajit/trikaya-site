@@ -3,6 +3,7 @@ import Link from "next/link";
 const NAV_ITEMS = [
   { href: "/admin", label: "Settings" },
   { href: "/admin/agents", label: "Agents" },
+  { href: "/admin/properties", label: "Properties" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
