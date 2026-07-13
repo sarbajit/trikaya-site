@@ -77,7 +77,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
       </div>
 
       <div className="mt-6">
-        <PropertyGallery slug={property.slug} name={property.name} />
+        <PropertyGallery slug={property.slug} name={property.name} images={property.images} />
       </div>
 
       <BookingCartProvider>
@@ -110,6 +110,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                     maxOccupancy: room.maxOccupancy,
                     pricingModel: room.pricingModel,
                     basePriceB2C: room.basePriceB2C,
+                    images: room.images,
                   }}
                 />
               ))}

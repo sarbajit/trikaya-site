@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
-import { PropertyImage } from "./PropertyImage";
+import { PropertyPhoto } from "./PropertyPhoto";
 import { StarRating } from "./StarRating";
 import { Badge } from "@/components/ui/badge";
 import type { PropertyListItem } from "@/lib/property-search";
@@ -17,7 +17,8 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
       href={`/properties/${property.slug}`}
       className="group flex flex-col overflow-hidden rounded-md border border-border bg-card transition-shadow hover:shadow-lg"
     >
-      <PropertyImage
+      <PropertyPhoto
+        image={property.heroImage}
         seedKey={property.slug}
         alt={property.name}
         className="aspect-[4/3] transition-transform duration-500 group-hover:scale-[1.03]"

@@ -17,9 +17,10 @@ interface ImageGalleryUploaderProps {
   images: GalleryImage[];
   onChange: (images: GalleryImage[]) => void;
   label?: string;
+  altHint?: string;
 }
 
-export function ImageGalleryUploader({ folder, images, onChange, label }: ImageGalleryUploaderProps) {
+export function ImageGalleryUploader({ folder, images, onChange, label, altHint }: ImageGalleryUploaderProps) {
   function updateImage(index: number, patch: Partial<GalleryImage>) {
     onChange(images.map((image, i) => (i === index ? { ...image, ...patch } : image)));
   }
@@ -29,7 +30,10 @@ export function ImageGalleryUploader({ folder, images, onChange, label }: ImageG
   }
 
   function addImage(url: string) {
-    onChange([...images, { url, alt: "" }]);
+    // Default to a non-empty alt so a fresh upload never fails the
+    // "alt text is required" validation just because the admin hasn't
+    // typed anything yet — still fully editable below.
+    onChange([...images, { url, alt: `${altHint ?? "Property"} photo ${images.length + 1}` }]);
   }
 
   return (

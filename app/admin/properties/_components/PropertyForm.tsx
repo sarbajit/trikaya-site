@@ -244,7 +244,15 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
           <CardTitle>Gallery</CardTitle>
         </CardHeader>
         <CardContent>
-          <ImageGalleryUploader folder="properties" images={form.images} onChange={(images) => update("images", images)} />
+          <ImageGalleryUploader
+            folder="properties"
+            images={form.images}
+            onChange={(images) => update("images", images)}
+            altHint={form.name || "Property"}
+          />
+          {errors?.images && errors.images.length > 0 && (
+            <p className="mt-2 text-xs text-destructive">{errors.images.join(", ")}</p>
+          )}
         </CardContent>
       </Card>
 

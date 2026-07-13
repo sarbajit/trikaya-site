@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Users } from "lucide-react";
-import { PropertyImage } from "./PropertyImage";
+import { PropertyPhoto } from "./PropertyPhoto";
 import { Button } from "@/components/ui/button";
 import { useOptionalBookingCart } from "./BookingCartContext";
 
@@ -13,6 +13,7 @@ export interface RoomTypeCardData {
   maxOccupancy: number;
   pricingModel: "per_night" | "per_person_per_night";
   basePriceB2C: number;
+  images?: { url: string; alt: string }[];
 }
 
 export function RoomTypeCard({ room, propertySlug }: { room: RoomTypeCardData; propertySlug: string }) {
@@ -54,7 +55,8 @@ export function RoomTypeCard({ room, propertySlug }: { room: RoomTypeCardData; p
 
   return (
     <div className="grid gap-4 rounded-md border border-border bg-card p-3 sm:grid-cols-[10rem_1fr_auto] sm:items-center sm:p-4">
-      <PropertyImage
+      <PropertyPhoto
+        image={room.images?.[0] ?? null}
         seedKey={`${propertySlug}-room-${room.id}`}
         alt={room.name}
         className="aspect-[4/3] rounded-sm sm:aspect-square"

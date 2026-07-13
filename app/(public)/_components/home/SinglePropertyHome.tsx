@@ -2,7 +2,7 @@ import { MapPin } from "lucide-react";
 import { connectDB } from "@/lib/db";
 import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
-import { PropertyImage } from "../PropertyImage";
+import { PropertyPhoto } from "../PropertyPhoto";
 import { PropertyGallery } from "../PropertyGallery";
 import { StarRating } from "../StarRating";
 import { AmenityIcon } from "../AmenityIcon";
@@ -23,7 +23,12 @@ export async function SinglePropertyHome() {
   return (
     <div>
       <section className="relative overflow-hidden">
-        <PropertyImage seedKey={property.slug} alt={property.name} className="h-[70vh] min-h-[420px] w-full" />
+        <PropertyPhoto
+          image={property.images?.[0] ?? null}
+          seedKey={property.slug}
+          alt={property.name}
+          className="h-[70vh] min-h-[420px] w-full"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent" />
         <div className="absolute inset-0 flex items-end">
           <div className="animate-fade-up mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6">
@@ -62,7 +67,7 @@ export async function SinglePropertyHome() {
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <h2 className="font-display text-2xl text-foreground">Gallery</h2>
         <div className="mt-5">
-          <PropertyGallery slug={property.slug} name={property.name} />
+          <PropertyGallery slug={property.slug} name={property.name} images={property.images} />
         </div>
       </section>
 
@@ -79,6 +84,7 @@ export async function SinglePropertyHome() {
                 maxOccupancy: room.maxOccupancy,
                 pricingModel: room.pricingModel,
                 basePriceB2C: room.basePriceB2C,
+                images: room.images,
               }}
             />
           ))}

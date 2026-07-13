@@ -207,7 +207,15 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
           <CardTitle>Images</CardTitle>
         </CardHeader>
         <CardContent>
-          <ImageGalleryUploader folder="rooms" images={form.images} onChange={(images) => update("images", images)} />
+          <ImageGalleryUploader
+            folder="rooms"
+            images={form.images}
+            onChange={(images) => update("images", images)}
+            altHint={form.name || "Room"}
+          />
+          {errors?.images && errors.images.length > 0 && (
+            <p className="mt-2 text-xs text-destructive">{errors.images.join(", ")}</p>
+          )}
         </CardContent>
       </Card>
 

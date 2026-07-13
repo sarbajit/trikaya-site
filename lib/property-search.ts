@@ -14,6 +14,7 @@ export interface PropertyListItem {
   starRating?: number;
   minPriceB2C: number | null;
   maxOccupancy: number;
+  heroImage: { url: string; alt: string } | null;
 }
 
 export interface PropertySearchFilters {
@@ -79,6 +80,7 @@ export async function searchProperties(filters: PropertySearchFilters = {}): Pro
       starRating: property.starRating,
       minPriceB2C: stats?.minPrice ?? null,
       maxOccupancy: stats?.maxOccupancy ?? 0,
+      heroImage: property.images?.[0] ? { url: property.images[0].url, alt: property.images[0].alt } : null,
     };
   });
 
