@@ -27,7 +27,7 @@ export function SiteFooter({ companyName, addresses, phones, emails, socialLinks
   return (
     <footer className="border-t border-border bg-muted/40">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="grid gap-10 sm:grid-cols-3">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="font-display text-lg text-foreground">{companyName}</p>
             <p className="mt-2 max-w-xs text-sm text-muted-foreground">
@@ -62,6 +62,27 @@ export function SiteFooter({ companyName, addresses, phones, emails, socialLinks
               </Link>
               <Link href="/properties" className="text-foreground/80 hover:text-primary">
                 Properties
+              </Link>
+              <Link href="/about" className="text-foreground/80 hover:text-primary">
+                About Us
+              </Link>
+              <Link href="/contact" className="text-foreground/80 hover:text-primary">
+                Contact
+              </Link>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Legal</p>
+            <div className="mt-3 flex flex-col gap-2 text-sm">
+              <Link href="/terms" className="text-foreground/80 hover:text-primary">
+                Terms & Conditions
+              </Link>
+              <Link href="/privacy-policy" className="text-foreground/80 hover:text-primary">
+                Privacy Policy
+              </Link>
+              <Link href="/refund-cancellation-policy" className="text-foreground/80 hover:text-primary">
+                Refund & Cancellation Policy
               </Link>
             </div>
           </div>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { connectDB } from "@/lib/db";
 import { getSiteSettings } from "@/models/SiteSettings";
 import { Providers } from "./providers";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 
 export const metadata: Metadata = {
   title: "Trikaya",
@@ -36,6 +37,7 @@ export default async function RootLayout({
     <html lang="en" style={themeVars}>
       <body>
         <Providers>{children}</Providers>
+        <CookieConsentBanner />
       </body>
     </html>
   );

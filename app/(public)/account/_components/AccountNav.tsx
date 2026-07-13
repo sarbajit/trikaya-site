@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/account/bookings", label: "Bookings" },
   { href: "/account/reviews", label: "Reviews" },
+  { href: "/account/privacy", label: "Privacy" },
 ];
 
 export function AccountNav() {

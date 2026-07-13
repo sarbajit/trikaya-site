@@ -10,7 +10,9 @@ import {
   ChevronsRight,
   FileText,
   LayoutDashboard,
+  MessageSquare,
   Settings,
+  ShieldCheck,
   Star,
   Users,
 } from "lucide-react";
@@ -29,7 +31,9 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck, disabled: true },
   { href: "/admin/agents", label: "Agents", icon: Users },
   { href: "/admin/reviews", label: "Reviews", icon: Star },
-  { href: "/admin/content", label: "Content", icon: FileText, disabled: true },
+  { href: "/admin/content", label: "Content", icon: FileText },
+  { href: "/admin/contact-messages", label: "Messages", icon: MessageSquare },
+  { href: "/admin/gdpr", label: "GDPR", icon: ShieldCheck },
   { href: "/admin", label: "Settings", icon: Settings },
 ];
 

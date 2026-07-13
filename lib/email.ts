@@ -4,6 +4,8 @@ import { passwordResetTemplate } from "@/emails/passwordReset";
 import { agentRegisteredTemplate } from "@/emails/agentRegistered";
 import { agentStatusChangedTemplate } from "@/emails/agentStatusChanged";
 import { bookingConfirmedTemplate } from "@/emails/bookingConfirmed";
+import { contactMessageTemplate } from "@/emails/contactMessage";
+import { dataDeletionRequestedTemplate } from "@/emails/dataDeletionRequested";
 import type { AgentStatus } from "@/models/Agent";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -86,6 +88,36 @@ export async function sendBookingConfirmationEmail(params: {
       ? [{ filename: `${params.invoiceNumber}.pdf`, content: params.invoicePdf }]
       : undefined;
   await send(params.to, subject, html, attachments);
+}
+
+export async function sendContactMessageEmail(params: {
+  to: string;
+  name: string;
+  email: string;
+  message: string;
+  adminUrl: string;
+}): Promise<void> {
+  const { subject, html } = contactMessageTemplate({
+    name: params.name,
+    email: params.email,
+    message: params.message,
+    adminUrl: params.adminUrl,
+  });
+  await send(params.to, subject, html);
+}
+
+export async function sendDataDeletionRequestedEmail(params: {
+  to: string;
+  name: string;
+  email: string;
+  adminUrl: string;
+}): Promise<void> {
+  const { subject, html } = dataDeletionRequestedTemplate({
+    name: params.name,
+    email: params.email,
+    adminUrl: params.adminUrl,
+  });
+  await send(params.to, subject, html);
 }
 
 export async function sendAgentStatusChangedEmail(params: {
