@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { RoomType } from "@/models/RoomType";
 import { Button } from "@/components/ui/button";
 import { RoomTypeForm, type RoomTypeFormData } from "../../_components/RoomTypeForm";
+import { PageHeader } from "@/app/admin/_components/PageHeader";
 
 export default async function EditRoomTypePage({ params }: { params: Promise<{ roomTypeId: string }> }) {
   await connectDB();
@@ -28,22 +29,26 @@ export default async function EditRoomTypePage({ params }: { params: Promise<{ r
   const propertyId = roomType.propertyId.toString();
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <div className="mx-auto max-w-3xl">
       <Link href={`/admin/properties/${propertyId}/edit`} className="text-sm text-muted-foreground hover:underline">
         &larr; Back to property
       </Link>
-      <div className="mt-2 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Edit {roomType.name}</h1>
-        <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/admin/room-types/${roomTypeId}/rate-plans`}>Rate plans</Link>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/admin/room-types/${roomTypeId}/availability`}>Availability</Link>
-          </Button>
-        </div>
+      <div className="mt-2">
+        <PageHeader
+          title={`Edit ${roomType.name}`}
+          actions={
+            <>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/admin/room-types/${roomTypeId}/rate-plans`}>Rate plans</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/admin/room-types/${roomTypeId}/availability`}>Availability</Link>
+              </Button>
+            </>
+          }
+        />
       </div>
       <RoomTypeForm propertyId={propertyId} initialData={initialData} roomTypeId={roomTypeId} />
-    </main>
+    </div>
   );
 }

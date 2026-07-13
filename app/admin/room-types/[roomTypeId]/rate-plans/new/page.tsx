@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { RoomType } from "@/models/RoomType";
 import { RatePlanForm } from "@/app/admin/room-types/_components/RatePlanForm";
+import { PageHeader } from "@/app/admin/_components/PageHeader";
 
 export default async function NewRatePlanPage({ params }: { params: Promise<{ roomTypeId: string }> }) {
   await connectDB();
@@ -12,9 +13,9 @@ export default async function NewRatePlanPage({ params }: { params: Promise<{ ro
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="text-2xl font-semibold text-foreground">New rate plan for {roomType.name}</h1>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader title={`New rate plan for ${roomType.name}`} />
       <RatePlanForm roomTypeId={roomTypeId} />
-    </main>
+    </div>
   );
 }

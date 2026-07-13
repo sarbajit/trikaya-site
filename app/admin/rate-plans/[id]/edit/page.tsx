@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { formatISODate } from "@/lib/date-helpers";
 import { RatePlan } from "@/models/RatePlan";
 import { RatePlanForm, type RatePlanFormData } from "@/app/admin/room-types/_components/RatePlanForm";
+import { PageHeader } from "@/app/admin/_components/PageHeader";
 
 export default async function EditRatePlanPage({ params }: { params: Promise<{ id: string }> }) {
   await connectDB();
@@ -24,12 +25,14 @@ export default async function EditRatePlanPage({ params }: { params: Promise<{ i
   };
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <div className="mx-auto max-w-3xl">
       <Link href={`/admin/room-types/${roomTypeId}/rate-plans`} className="text-sm text-muted-foreground hover:underline">
         &larr; Back to rate plans
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold text-foreground">Edit rate plan</h1>
+      <div className="mt-2">
+        <PageHeader title="Edit rate plan" />
+      </div>
       <RatePlanForm roomTypeId={roomTypeId} initialData={initialData} ratePlanId={id} />
-    </main>
+    </div>
   );
 }

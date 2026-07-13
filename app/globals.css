@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "./theme.css";
 
+/* Enables `dark:` utility variants scoped to the admin dark-mode toggle
+   (data-theme="dark" on the admin shell wrapper) instead of Tailwind's
+   default prefers-color-scheme media query, since dark mode here is an
+   explicit per-user admin toggle, not an OS-level preference. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 body {
   color: var(--color-foreground);
   background: var(--color-background);

@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { AgentApprovalTable } from "./AgentApprovalTable";
+import { PageHeader } from "../_components/PageHeader";
 
 export default async function AdminAgentsPage() {
   await connectDB();
@@ -19,12 +20,12 @@ export default async function AdminAgentsPage() {
   }));
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="text-2xl font-semibold text-foreground">B2B Agent Approval Queue</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Review business-proof documents and approve, reject, or suspend agent accounts.
-      </p>
+    <div className="mx-auto max-w-5xl">
+      <PageHeader
+        title="B2B Agent Approval Queue"
+        description="Review business-proof documents and approve, reject, or suspend agent accounts."
+      />
       <AgentApprovalTable initialAgents={initialAgents} />
-    </main>
+    </div>
   );
 }

@@ -6,6 +6,7 @@ import { RatePlan } from "@/models/RatePlan";
 import { RoomType } from "@/models/RoomType";
 import { Button } from "@/components/ui/button";
 import { RatePlansTable } from "../../_components/RatePlansTable";
+import { PageHeader } from "@/app/admin/_components/PageHeader";
 
 export default async function RatePlansPage({ params }: { params: Promise<{ roomTypeId: string }> }) {
   await connectDB();
@@ -27,23 +28,27 @@ export default async function RatePlansPage({ params }: { params: Promise<{ room
   }));
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <div className="mx-auto max-w-5xl">
       <Link href={`/admin/room-types/${roomTypeId}/edit`} className="text-sm text-muted-foreground hover:underline">
         &larr; Back to {roomType.name}
       </Link>
-      <div className="mt-2 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Rate plans — {roomType.name}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Seasonal/date overrides for the base B2C rate of ₹{roomType.basePriceB2C.toLocaleString("en-IN")}
-            {" "}and B2B rate of ₹{roomType.basePriceB2B.toLocaleString("en-IN")}.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href={`/admin/room-types/${roomTypeId}/rate-plans/new`}>Add rate plan</Link>
-        </Button>
+      <div className="mt-2">
+        <PageHeader
+          title={`Rate plans — ${roomType.name}`}
+          description={
+            <>
+              Seasonal/date overrides for the base B2C rate of ₹{roomType.basePriceB2C.toLocaleString("en-IN")} and
+              B2B rate of ₹{roomType.basePriceB2B.toLocaleString("en-IN")}.
+            </>
+          }
+          actions={
+            <Button asChild>
+              <Link href={`/admin/room-types/${roomTypeId}/rate-plans/new`}>Add rate plan</Link>
+            </Button>
+          }
+        />
       </div>
       <RatePlansTable initialRatePlans={initialRatePlans} />
-    </main>
+    </div>
   );
 }

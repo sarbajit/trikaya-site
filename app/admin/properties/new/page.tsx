@@ -1,10 +1,11 @@
 import { PropertyForm } from "../_components/PropertyForm";
+import { PageHeader } from "../../_components/PageHeader";
 
 export default function NewPropertyPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="text-2xl font-semibold text-foreground">New property</h1>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader title="New property" />
       <PropertyForm />
-    </main>
+    </div>
   );
 }

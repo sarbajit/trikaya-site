@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { Property } from "@/models/Property";
 import { Button } from "@/components/ui/button";
 import { PropertiesTable } from "./PropertiesTable";
+import { PageHeader } from "../_components/PageHeader";
 
 export default async function AdminPropertiesPage() {
   await connectDB();
@@ -18,19 +19,17 @@ export default async function AdminPropertiesPage() {
   }));
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Properties</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage properties, room types, rate plans, and availability.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/admin/properties/new">New property</Link>
-        </Button>
-      </div>
+    <div className="mx-auto max-w-5xl">
+      <PageHeader
+        title="Properties"
+        description="Manage properties, room types, rate plans, and availability."
+        actions={
+          <Button asChild>
+            <Link href="/admin/properties/new">New property</Link>
+          </Button>
+        }
+      />
       <PropertiesTable initialProperties={initialProperties} />
-    </main>
+    </div>
   );
 }

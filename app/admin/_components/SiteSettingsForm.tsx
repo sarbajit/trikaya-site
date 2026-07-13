@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FormField } from "@/components/ui/form-field";
+import { useToast } from "@/hooks/use-toast";
 
 interface SocialLink {
   platform: string;
@@ -43,10 +44,10 @@ const DEFAULT_COLORS: Record<"primaryColor" | "secondaryColor" | "accentColor", 
 
 export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSettingsData }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [form, setForm] = useState<SiteSettingsData>(initialSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]> | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   function update<K extends keyof SiteSettingsData>(key: K, value: SiteSettingsData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -73,7 +74,6 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
     event.preventDefault();
     setIsSaving(true);
     setErrors(null);
-    setSuccessMessage(null);
 
     try {
       const response = await fetch("/api/admin/settings", {
@@ -85,10 +85,11 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
       if (!response.ok) {
         const body = await response.json().catch(() => null);
         setErrors(body?.error?.fieldErrors ?? { form: ["Failed to save settings"] });
+        toast({ title: "Failed to save settings", variant: "destructive" });
         return;
       }
 
-      setSuccessMessage("Settings saved.");
+      toast({ title: "Settings saved.", variant: "success" });
       router.refresh();
     } finally {
       setIsSaving(false);
@@ -102,15 +103,14 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
           <CardTitle>Company</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="companyName">Company name</Label>
+          <FormField label="Company name" htmlFor="companyName" error={errors?.companyName} required>
             <Input
               id="companyName"
               value={form.companyName}
               onChange={(e) => update("companyName", e.target.value)}
               required
             />
-          </div>
+          </FormField>
           <div className="flex items-center gap-2">
             <Switch
               id="showCompanyName"
@@ -206,8 +206,12 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
             </Button>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="contactRecipientEmail">Contact form recipient email</Label>
+          <FormField
+            label="Contact form recipient email"
+            htmlFor="contactRecipientEmail"
+            error={errors?.contactRecipientEmail}
+            required
+          >
             <Input
               id="contactRecipientEmail"
               type="email"
@@ -215,7 +219,7 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
               onChange={(e) => update("contactRecipientEmail", e.target.value)}
               required
             />
-          </div>
+          </FormField>
         </CardContent>
       </Card>
 
@@ -232,8 +236,7 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
             />
             <Label htmlFor="b2bEnabled">Enable B2B agent rates</Label>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="invoicePrefix">Invoice prefix</Label>
+          <FormField label="Invoice prefix" htmlFor="invoicePrefix" error={errors?.invoicePrefix} required>
             <Input
               id="invoicePrefix"
               value={form.invoicePrefix}
@@ -241,16 +244,15 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
               className="w-40"
               required
             />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="gstin">GSTIN</Label>
+          </FormField>
+          <FormField label="GSTIN" htmlFor="gstin">
             <Input
               id="gstin"
               value={form.taxSettings?.gstin ?? ""}
               onChange={(e) => update("taxSettings", { gstin: e.target.value })}
               className="w-60"
             />
-          </div>
+          </FormField>
         </CardContent>
       </Card>
 
@@ -259,8 +261,13 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
           <CardTitle>Child pricing</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="childMaxAge">Child rate applies up to age</Label>
+          <FormField
+            label="Child rate applies up to age"
+            htmlFor="childMaxAge"
+            error={errors?.childMaxAge}
+            hint="Guests aged 5 up to this age are charged each room type's child rate. Under 5 stays free. Above this age is charged the adult rate."
+            required
+          >
             <Input
               id="childMaxAge"
               type="number"
@@ -270,30 +277,9 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
               className="w-28"
               required
             />
-            <p className="text-xs text-muted-foreground">
-              Guests aged 5 up to this age are charged each room type&apos;s child rate. Under 5 stays free. Above
-              this age is charged the adult rate.
-            </p>
-          </div>
+          </FormField>
         </CardContent>
       </Card>
-
-      {errors && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {Object.entries(errors).map(([field, messages]) => (
-              <div key={field}>
-                <strong>{field}:</strong> {messages.join(", ")}
-              </div>
-            ))}
-          </AlertDescription>
-        </Alert>
-      )}
-      {successMessage && (
-        <Alert variant="success">
-          <AlertDescription>{successMessage}</AlertDescription>
-        </Alert>
-      )}
 
       <Button type="submit" disabled={isSaving} className="w-fit">
         {isSaving ? "Saving..." : "Save settings"}

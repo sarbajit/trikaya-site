@@ -2,12 +2,13 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -37,11 +38,11 @@ interface RatePlanFormProps {
 
 export function RatePlanForm({ roomTypeId, initialData, ratePlanId }: RatePlanFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const isEdit = Boolean(ratePlanId);
   const [form, setForm] = useState<RatePlanFormData>(initialData ?? EMPTY_RATE_PLAN_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]> | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
 
   function update<K extends keyof RatePlanFormData>(key: K, value: RatePlanFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -58,7 +59,6 @@ export function RatePlanForm({ roomTypeId, initialData, ratePlanId }: RatePlanFo
     event.preventDefault();
     setIsSaving(true);
     setErrors(null);
-    setFormError(null);
 
     const body = {
       roomTypeId,
@@ -83,10 +83,14 @@ export function RatePlanForm({ roomTypeId, initialData, ratePlanId }: RatePlanFo
       if (!response.ok) {
         const responseBody = await response.json().catch(() => null);
         setErrors(responseBody?.error?.fieldErrors ?? null);
-        setFormError(responseBody?.error?.formErrors?.[0] ?? "Failed to save rate plan");
+        toast({
+          title: responseBody?.error?.formErrors?.[0] ?? "Failed to save rate plan",
+          variant: "destructive",
+        });
         return;
       }
 
+      toast({ title: isEdit ? "Changes saved." : "Rate plan created.", variant: "success" });
       if (!isEdit) {
         router.push(`/admin/room-types/${roomTypeId}/rate-plans`);
       } else {
@@ -104,18 +108,16 @@ export function RatePlanForm({ roomTypeId, initialData, ratePlanId }: RatePlanFo
           <CardTitle>Rate plan</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="label">Label (optional)</Label>
+          <FormField label="Label (optional)" htmlFor="label" error={errors?.label}>
             <Input
               id="label"
               value={form.label}
               onChange={(e) => update("label", e.target.value)}
               placeholder="e.g. Winter Season"
             />
-          </div>
+          </FormField>
           <div className="flex gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="startDate">Start date</Label>
+            <FormField label="Start date" htmlFor="startDate" error={errors?.startDate} required>
               <Input
                 id="startDate"
                 type="date"
@@ -123,9 +125,8 @@ export function RatePlanForm({ roomTypeId, initialData, ratePlanId }: RatePlanFo
                 onChange={(e) => update("startDate", e.target.value)}
                 required
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="endDate">End date (exclusive)</Label>
+            </FormField>
+            <FormField label="End date (exclusive)" htmlFor="endDate" error={errors?.endDate} required>
               <Input
                 id="endDate"
                 type="date"
@@ -133,11 +134,10 @@ export function RatePlanForm({ roomTypeId, initialData, ratePlanId }: RatePlanFo
                 onChange={(e) => update("endDate", e.target.value)}
                 required
               />
-            </div>
+            </FormField>
           </div>
           <div className="flex gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="b2cRate">B2C rate (₹)</Label>
+            <FormField label="B2C rate (₹)" htmlFor="b2cRate" error={errors?.b2cRate} required>
               <Input
                 id="b2cRate"
                 type="number"
@@ -147,9 +147,8 @@ export function RatePlanForm({ roomTypeId, initialData, ratePlanId }: RatePlanFo
                 className="w-32"
                 required
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="b2bRate">B2B rate (₹)</Label>
+            </FormField>
+            <FormField label="B2B rate (₹)" htmlFor="b2bRate" error={errors?.b2bRate} required>
               <Input
                 id="b2bRate"
                 type="number"
@@ -159,7 +158,7 @@ export function RatePlanForm({ roomTypeId, initialData, ratePlanId }: RatePlanFo
                 className="w-32"
                 required
               />
-            </div>
+            </FormField>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>Days of week (leave empty to apply every day)</Label>
@@ -174,20 +173,6 @@ export function RatePlanForm({ roomTypeId, initialData, ratePlanId }: RatePlanFo
           </div>
         </CardContent>
       </Card>
-
-      {(errors || formError) && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {formError && <div>{formError}</div>}
-            {errors &&
-              Object.entries(errors).map(([field, messages]) => (
-                <div key={field}>
-                  <strong>{field}:</strong> {messages.join(", ")}
-                </div>
-              ))}
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Button type="submit" disabled={isSaving} className="w-fit">
         {isSaving ? "Saving..." : isEdit ? "Save changes" : "Create rate plan"}

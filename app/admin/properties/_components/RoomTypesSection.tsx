@@ -4,11 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useToast } from "@/hooks/use-toast";
 
 interface RoomTypeRow {
   id: string;
@@ -27,26 +27,87 @@ export function RoomTypesSection({
   initialRoomTypes: RoomTypeRow[];
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [roomTypes, setRoomTypes] = useState(initialRoomTypes);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string, name: string) {
     setDeletingId(id);
-    setError(null);
     try {
       const response = await fetch(`/api/admin/room-types/${id}`, { method: "DELETE" });
       if (!response.ok) {
         const body = await response.json().catch(() => null);
-        setError(body?.error ?? "Failed to delete room type");
+        toast({ title: body?.error ?? "Failed to delete room type", variant: "destructive" });
         return;
       }
       setRoomTypes((prev) => prev.filter((rt) => rt.id !== id));
+      toast({ title: `${name} deleted.`, variant: "success" });
       router.refresh();
     } finally {
       setDeletingId(null);
     }
   }
+
+  const columns: DataTableColumn<RoomTypeRow>[] = [
+    {
+      key: "name",
+      header: "Name",
+      sortValue: (rt) => rt.name,
+      className: "font-medium text-foreground",
+      render: (rt) => rt.name,
+    },
+    {
+      key: "pricingModel",
+      header: "Pricing model",
+      render: (rt) => (rt.pricingModel === "per_night" ? "Per night" : "Per person/night"),
+    },
+    {
+      key: "b2c",
+      header: "B2C rate",
+      sortValue: (rt) => rt.basePriceB2C,
+      render: (rt) => `₹${rt.basePriceB2C.toLocaleString("en-IN")}`,
+    },
+    {
+      key: "b2b",
+      header: "B2B rate",
+      sortValue: (rt) => rt.basePriceB2B,
+      render: (rt) => `₹${rt.basePriceB2B.toLocaleString("en-IN")}`,
+    },
+    {
+      key: "inventory",
+      header: "Inventory",
+      sortValue: (rt) => rt.totalInventory,
+      render: (rt) => rt.totalInventory,
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (roomType) => (
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/admin/room-types/${roomType.id}/edit`}>Edit</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/admin/room-types/${roomType.id}/rate-plans`}>Rates</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/admin/room-types/${roomType.id}/availability`}>Availability</Link>
+          </Button>
+          <ConfirmDialog
+            trigger={
+              <Button type="button" variant="ghost" size="sm" disabled={deletingId === roomType.id}>
+                <Trash2 />
+              </Button>
+            }
+            title={`Delete ${roomType.name}?`}
+            description="This permanently deletes the room type along with its rate plans and availability records. This cannot be undone."
+            confirmLabel="Delete"
+            onConfirm={() => handleDelete(roomType.id, roomType.name)}
+          />
+        </div>
+      ),
+    },
+  ];
 
   return (
     <Card className="mt-8">
@@ -57,81 +118,12 @@ export function RoomTypesSection({
         </Button>
       </CardHeader>
       <CardContent>
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Pricing model</TableHead>
-              <TableHead>B2C rate</TableHead>
-              <TableHead>B2B rate</TableHead>
-              <TableHead>Inventory</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {roomTypes.map((roomType) => (
-              <TableRow key={roomType.id}>
-                <TableCell className="font-medium text-foreground">{roomType.name}</TableCell>
-                <TableCell>{roomType.pricingModel === "per_night" ? "Per night" : "Per person/night"}</TableCell>
-                <TableCell>₹{roomType.basePriceB2C.toLocaleString("en-IN")}</TableCell>
-                <TableCell>₹{roomType.basePriceB2B.toLocaleString("en-IN")}</TableCell>
-                <TableCell>{roomType.totalInventory}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-2">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/admin/room-types/${roomType.id}/edit`}>Edit</Link>
-                    </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/admin/room-types/${roomType.id}/rate-plans`}>Rates</Link>
-                    </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/admin/room-types/${roomType.id}/availability`}>Availability</Link>
-                    </Button>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button type="button" variant="ghost" size="sm" disabled={deletingId === roomType.id}>
-                          <Trash2 />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogTitle>Delete {roomType.name}?</DialogTitle>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          This permanently deletes the room type along with its rate plans and availability
-                          records. This cannot be undone.
-                        </p>
-                        <div className="mt-4 flex justify-end gap-2">
-                          <DialogClose asChild>
-                            <Button type="button" variant="outline" size="sm">
-                              Cancel
-                            </Button>
-                          </DialogClose>
-                          <DialogClose asChild>
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDelete(roomType.id)}
-                            >
-                              Delete
-                            </Button>
-                          </DialogClose>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {roomTypes.length === 0 && (
-          <p className="text-sm text-muted-foreground">No room types yet.</p>
-        )}
+        <DataTable
+          columns={columns}
+          data={roomTypes}
+          rowKey={(rt) => rt.id}
+          emptyMessage="No room types yet."
+        />
       </CardContent>
     </Card>
   );

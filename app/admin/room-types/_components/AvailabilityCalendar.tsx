@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface CalendarCell {
   iso: string;
@@ -32,9 +32,9 @@ const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function AvailabilityCalendar({ roomTypeId, weeks, prevHref, nextHref, monthLabel }: AvailabilityCalendarProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   function toggleDate(iso: string) {
     setSelected((prev) => {
@@ -51,7 +51,6 @@ export function AvailabilityCalendar({ roomTypeId, weeks, prevHref, nextHref, mo
   async function applyAction(action: "block" | "unblock") {
     if (selected.size === 0) return;
     setIsSubmitting(true);
-    setError(null);
     try {
       const response = await fetch(`/api/admin/room-types/${roomTypeId}/availability`, {
         method: "POST",
@@ -60,9 +59,13 @@ export function AvailabilityCalendar({ roomTypeId, weeks, prevHref, nextHref, mo
       });
       if (!response.ok) {
         const body = await response.json().catch(() => null);
-        setError(body?.error?.formErrors?.[0] ?? "Failed to update availability");
+        toast({
+          title: body?.error?.formErrors?.[0] ?? "Failed to update availability",
+          variant: "destructive",
+        });
         return;
       }
+      toast({ title: action === "block" ? "Dates blocked." : "Dates unblocked.", variant: "success" });
       setSelected(new Set());
       router.refresh();
     } finally {
@@ -81,12 +84,6 @@ export function AvailabilityCalendar({ roomTypeId, weeks, prevHref, nextHref, mo
           <Link href={nextHref}>Next &rarr;</Link>
         </Button>
       </div>
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
 
       <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted-foreground">
         {WEEKDAY_LABELS.map((label) => (

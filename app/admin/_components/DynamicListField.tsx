@@ -35,10 +35,11 @@ export function DynamicListField({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
+      {items.length === 0 && <p className="text-xs text-muted-foreground">None added yet.</p>}
       {items.map((item, index) => (
-        <div key={index} className="flex gap-2">
+        <div key={index} className="flex items-center gap-2">
           <Input
             type={inputType}
             value={item}

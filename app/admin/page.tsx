@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { getSiteSettings } from "@/models/SiteSettings";
 import { SiteSettingsForm } from "./_components/SiteSettingsForm";
+import { PageHeader } from "./_components/PageHeader";
 
 export default async function AdminSettingsPage() {
   await connectDB();
@@ -25,12 +26,12 @@ export default async function AdminSettingsPage() {
   };
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="text-2xl font-semibold text-foreground">Branding &amp; Site Settings</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        These settings control the company branding and theme colors used across the site.
-      </p>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        title="Branding & Site Settings"
+        description="These settings control the company branding and theme colors used across the site."
+      />
       <SiteSettingsForm initialSettings={initialSettings} />
-    </main>
+    </div>
   );
 }

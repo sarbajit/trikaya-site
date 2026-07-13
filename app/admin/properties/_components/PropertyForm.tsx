@@ -4,15 +4,16 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { DynamicListField } from "@/app/admin/_components/DynamicListField";
 import { ImageGalleryUploader, type GalleryImage } from "@/components/ImageGalleryUploader";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { slugify } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export interface PropertyFormData {
   name: string;
@@ -61,12 +62,12 @@ export const EMPTY_PROPERTY_FORM: PropertyFormData = {
 
 export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const isEdit = Boolean(propertyId);
   const [form, setForm] = useState<PropertyFormData>(initialData ?? EMPTY_PROPERTY_FORM);
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]> | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
 
   function update<K extends keyof PropertyFormData>(key: K, value: PropertyFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -83,7 +84,6 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
     event.preventDefault();
     setIsSaving(true);
     setErrors(null);
-    setFormError(null);
 
     const body = {
       name: form.name,
@@ -122,11 +122,15 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
       if (!response.ok) {
         const responseBody = await response.json().catch(() => null);
         setErrors(responseBody?.error?.fieldErrors ?? null);
-        setFormError(responseBody?.error?.formErrors?.[0] ?? "Failed to save property");
+        toast({
+          title: responseBody?.error?.formErrors?.[0] ?? "Failed to save property",
+          variant: "destructive",
+        });
         return;
       }
 
       const saved = await response.json();
+      toast({ title: isEdit ? "Changes saved." : "Property created.", variant: "success" });
       if (!isEdit) {
         router.push(`/admin/properties/${saved._id}/edit`);
       } else {
@@ -144,12 +148,10 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
           <CardTitle>Basic info</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="name">Name</Label>
+          <FormField label="Name" htmlFor="name" error={errors?.name} required>
             <Input id="name" value={form.name} onChange={(e) => handleNameChange(e.target.value)} required />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="slug">Slug</Label>
+          </FormField>
+          <FormField label="Slug" htmlFor="slug" error={errors?.slug} required>
             <Input
               id="slug"
               value={form.slug}
@@ -159,9 +161,8 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
               }}
               required
             />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="propertyType">Property type</Label>
+          </FormField>
+          <FormField label="Property type" htmlFor="propertyType" error={errors?.propertyType}>
             <Select value={form.propertyType} onValueChange={(v) => update("propertyType", v as PropertyFormData["propertyType"])}>
               <SelectTrigger id="propertyType">
                 <SelectValue />
@@ -172,9 +173,8 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
                 <SelectItem value="homestay">Homestay</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="starRating">Star rating (1-5)</Label>
+          </FormField>
+          <FormField label="Star rating (1-5)" htmlFor="starRating" error={errors?.starRating}>
             <Input
               id="starRating"
               type="number"
@@ -184,13 +184,12 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
               onChange={(e) => update("starRating", e.target.value)}
               className="w-24"
             />
-          </div>
+          </FormField>
           <div className="flex items-center gap-2">
             <Switch id="isActive" checked={form.isActive} onCheckedChange={(v) => update("isActive", v)} />
             <Label htmlFor="isActive">Active (visible on the public site)</Label>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="homepageMode">Homepage mode</Label>
+          <FormField label="Homepage mode" htmlFor="homepageMode" error={errors?.homepageMode}>
             <Select value={form.homepageMode} onValueChange={(v) => update("homepageMode", v as PropertyFormData["homepageMode"])}>
               <SelectTrigger id="homepageMode" className="w-48">
                 <SelectValue />
@@ -202,7 +201,7 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
                 <SelectItem value="portal">Portal</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
         </CardContent>
       </Card>
 
@@ -211,23 +210,19 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
           <CardTitle>Location</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="destination">Destination</Label>
+          <FormField label="Destination" htmlFor="destination" error={errors?.destination} required>
             <Input id="destination" value={form.destination} onChange={(e) => update("destination", e.target.value)} required />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="address">Address</Label>
+          </FormField>
+          <FormField label="Address" htmlFor="address" error={errors?.address} required>
             <Textarea id="address" value={form.address} onChange={(e) => update("address", e.target.value)} required />
-          </div>
+          </FormField>
           <div className="flex gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="geoLat">Latitude</Label>
+            <FormField label="Latitude" htmlFor="geoLat" error={errors?.geo}>
               <Input id="geoLat" value={form.geoLat} onChange={(e) => update("geoLat", e.target.value)} className="w-32" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="geoLng">Longitude</Label>
+            </FormField>
+            <FormField label="Longitude" htmlFor="geoLng">
               <Input id="geoLng" value={form.geoLng} onChange={(e) => update("geoLng", e.target.value)} className="w-32" />
-            </div>
+            </FormField>
           </div>
         </CardContent>
       </Card>
@@ -237,10 +232,9 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
           <CardTitle>Description &amp; amenities</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="description">Description</Label>
+          <FormField label="Description" htmlFor="description" error={errors?.description} required>
             <Textarea id="description" value={form.description} onChange={(e) => update("description", e.target.value)} required />
-          </div>
+          </FormField>
           <DynamicListField label="Amenities" items={form.amenities} onChange={(items) => update("amenities", items)} />
         </CardContent>
       </Card>
@@ -260,39 +254,21 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="checkIn">Check-in</Label>
+            <FormField label="Check-in" htmlFor="checkIn">
               <Input id="checkIn" value={form.checkIn} onChange={(e) => update("checkIn", e.target.value)} placeholder="e.g. 2:00 PM" className="w-40" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="checkOut">Check-out</Label>
+            </FormField>
+            <FormField label="Check-out" htmlFor="checkOut">
               <Input id="checkOut" value={form.checkOut} onChange={(e) => update("checkOut", e.target.value)} placeholder="e.g. 11:00 AM" className="w-40" />
-            </div>
+            </FormField>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="houseRules">House rules</Label>
+          <FormField label="House rules" htmlFor="houseRules">
             <Textarea id="houseRules" value={form.houseRules} onChange={(e) => update("houseRules", e.target.value)} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="cancellationPolicy">Cancellation policy</Label>
+          </FormField>
+          <FormField label="Cancellation policy" htmlFor="cancellationPolicy">
             <Textarea id="cancellationPolicy" value={form.cancellationPolicy} onChange={(e) => update("cancellationPolicy", e.target.value)} />
-          </div>
+          </FormField>
         </CardContent>
       </Card>
-
-      {(errors || formError) && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {formError && <div>{formError}</div>}
-            {errors &&
-              Object.entries(errors).map(([field, messages]) => (
-                <div key={field}>
-                  <strong>{field}:</strong> {messages.join(", ")}
-                </div>
-              ))}
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Button type="submit" disabled={isSaving} className="w-fit">
         {isSaving ? "Saving..." : isEdit ? "Save changes" : "Create property"}

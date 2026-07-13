@@ -4,6 +4,7 @@ import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
 import { PropertyForm, type PropertyFormData } from "../../_components/PropertyForm";
 import { RoomTypesSection } from "../../_components/RoomTypesSection";
+import { PageHeader } from "../../../_components/PageHeader";
 
 export default async function EditPropertyPage({ params }: { params: Promise<{ id: string }> }) {
   await connectDB();
@@ -44,10 +45,10 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ i
   };
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="text-2xl font-semibold text-foreground">Edit {property.name}</h1>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader title={`Edit ${property.name}`} />
       <PropertyForm initialData={initialData} propertyId={property._id.toString()} />
       <RoomTypesSection propertyId={property._id.toString()} initialRoomTypes={initialRoomTypes} />
-    </main>
+    </div>
   );
 }

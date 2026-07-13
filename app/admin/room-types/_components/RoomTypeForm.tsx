@@ -3,12 +3,12 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ImageGalleryUploader, type GalleryImage } from "@/components/ImageGalleryUploader";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 export interface RoomTypeFormData {
   name: string;
@@ -42,11 +42,11 @@ interface RoomTypeFormProps {
 
 export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const isEdit = Boolean(roomTypeId);
   const [form, setForm] = useState<RoomTypeFormData>(initialData ?? EMPTY_ROOM_TYPE_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]> | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
 
   function update<K extends keyof RoomTypeFormData>(key: K, value: RoomTypeFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -56,7 +56,6 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
     event.preventDefault();
     setIsSaving(true);
     setErrors(null);
-    setFormError(null);
 
     const body = {
       propertyId,
@@ -84,10 +83,14 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
       if (!response.ok) {
         const responseBody = await response.json().catch(() => null);
         setErrors(responseBody?.error?.fieldErrors ?? null);
-        setFormError(responseBody?.error?.formErrors?.[0] ?? "Failed to save room type");
+        toast({
+          title: responseBody?.error?.formErrors?.[0] ?? "Failed to save room type",
+          variant: "destructive",
+        });
         return;
       }
 
+      toast({ title: isEdit ? "Changes saved." : "Room type created.", variant: "success" });
       if (!isEdit) {
         router.push(`/admin/properties/${propertyId}/edit`);
       } else {
@@ -105,13 +108,11 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
           <CardTitle>Room type details</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="name">Name</Label>
+          <FormField label="Name" htmlFor="name" error={errors?.name} required>
             <Input id="name" value={form.name} onChange={(e) => update("name", e.target.value)} required />
-          </div>
+          </FormField>
           <div className="flex gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="maxOccupancy">Max occupancy</Label>
+            <FormField label="Max occupancy" htmlFor="maxOccupancy" error={errors?.maxOccupancy} required>
               <Input
                 id="maxOccupancy"
                 type="number"
@@ -121,9 +122,8 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
                 className="w-28"
                 required
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="totalInventory">Total inventory</Label>
+            </FormField>
+            <FormField label="Total inventory" htmlFor="totalInventory" error={errors?.totalInventory} required>
               <Input
                 id="totalInventory"
                 type="number"
@@ -133,10 +133,9 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
                 className="w-28"
                 required
               />
-            </div>
+            </FormField>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="pricingModel">Pricing model</Label>
+          <FormField label="Pricing model" htmlFor="pricingModel" error={errors?.pricingModel}>
             <Select
               value={form.pricingModel}
               onValueChange={(v) => update("pricingModel", v as RoomTypeFormData["pricingModel"])}
@@ -149,10 +148,9 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
                 <SelectItem value="per_person_per_night">Per person, per night</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
           <div className="flex gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="basePriceB2C">Base rate (B2C, ₹)</Label>
+            <FormField label="Base rate (B2C, ₹)" htmlFor="basePriceB2C" error={errors?.basePriceB2C} required>
               <Input
                 id="basePriceB2C"
                 type="number"
@@ -162,9 +160,8 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
                 className="w-32"
                 required
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="basePriceB2B">Base rate (B2B, ₹)</Label>
+            </FormField>
+            <FormField label="Base rate (B2B, ₹)" htmlFor="basePriceB2B" error={errors?.basePriceB2B} required>
               <Input
                 id="basePriceB2B"
                 type="number"
@@ -174,12 +171,11 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
                 className="w-32"
                 required
               />
-            </div>
+            </FormField>
           </div>
           {form.pricingModel === "per_person_per_night" && (
             <div className="flex gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="childPriceB2C">Child rate (B2C, ₹)</Label>
+              <FormField label="Child rate (B2C, ₹)" htmlFor="childPriceB2C" error={errors?.childPriceB2C} required>
                 <Input
                   id="childPriceB2C"
                   type="number"
@@ -189,9 +185,8 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
                   className="w-32"
                   required
                 />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="childPriceB2B">Child rate (B2B, ₹)</Label>
+              </FormField>
+              <FormField label="Child rate (B2B, ₹)" htmlFor="childPriceB2B" error={errors?.childPriceB2B} required>
                 <Input
                   id="childPriceB2B"
                   type="number"
@@ -201,7 +196,7 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
                   className="w-32"
                   required
                 />
-              </div>
+              </FormField>
             </div>
           )}
         </CardContent>
@@ -215,20 +210,6 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
           <ImageGalleryUploader folder="rooms" images={form.images} onChange={(images) => update("images", images)} />
         </CardContent>
       </Card>
-
-      {(errors || formError) && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {formError && <div>{formError}</div>}
-            {errors &&
-              Object.entries(errors).map(([field, messages]) => (
-                <div key={field}>
-                  <strong>{field}:</strong> {messages.join(", ")}
-                </div>
-              ))}
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Button type="submit" disabled={isSaving} className="w-fit">
         {isSaving ? "Saving..." : isEdit ? "Save changes" : "Create room type"}

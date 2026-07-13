@@ -30,6 +30,26 @@
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Admin dark mode: neutral tokens only, toggled via [data-theme="dark"] on the
+   admin shell wrapper (see app/admin/_components/AdminTopbar.tsx). Brand
+   tokens (primary/secondary/accent) are intentionally left untouched here so
+   admin dark mode never overrides SiteSettings colors. Scoped to the admin
+   shell wrapper, not documentElement, so the public site is unaffected. */
+[data-theme="dark"] {
+  --color-background: #0b0f17;
+  --color-foreground: #e2e8f0;
+  --color-card: #111827;
+  --color-card-foreground: #e2e8f0;
+  --color-popover: #111827;
+  --color-popover-foreground: #e2e8f0;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  --color-border: #1f2937;
+  --color-input: #1f2937;
+  --color-destructive: #f87171;
+  --color-destructive-foreground: #1c0505;
+}
+
 @theme inline {
   --color-primary: var(--color-primary);
   --color-secondary: var(--color-secondary);

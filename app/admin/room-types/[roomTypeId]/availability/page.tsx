@@ -6,6 +6,7 @@ import { resolveAvailableUnits } from "@/lib/pricing";
 import { Availability } from "@/models/Availability";
 import { RoomType } from "@/models/RoomType";
 import { AvailabilityCalendar } from "../../_components/AvailabilityCalendar";
+import { PageHeader } from "@/app/admin/_components/PageHeader";
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -64,15 +65,16 @@ export default async function AvailabilityPage({
   const nextYear = month === 12 ? year + 1 : year;
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <div className="mx-auto max-w-4xl">
       <Link href={`/admin/room-types/${roomTypeId}/edit`} className="text-sm text-muted-foreground hover:underline">
         &larr; Back to {roomType.name}
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold text-foreground">Availability — {roomType.name}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Click dates to select them, then block or unblock in bulk. Dates without a record default to the
-        room type&apos;s total inventory ({roomType.totalInventory}).
-      </p>
+      <div className="mt-2">
+        <PageHeader
+          title={`Availability — ${roomType.name}`}
+          description={`Click dates to select them, then block or unblock in bulk. Dates without a record default to the room type's total inventory (${roomType.totalInventory}).`}
+        />
+      </div>
       <div className="mt-6">
         <AvailabilityCalendar
           roomTypeId={roomTypeId}
@@ -84,6 +86,6 @@ export default async function AvailabilityPage({
           monthLabel={`${MONTH_NAMES[month - 1]} ${year}`}
         />
       </div>
-    </main>
+    </div>
   );
 }
