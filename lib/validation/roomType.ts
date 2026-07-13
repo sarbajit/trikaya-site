@@ -8,6 +8,8 @@ export const roomTypeSchema = z.object({
   pricingModel: z.enum(["per_night", "per_person_per_night"]),
   basePriceB2C: z.number().min(0),
   basePriceB2B: z.number().min(0),
+  childPriceB2C: z.number().min(0).default(0),
+  childPriceB2B: z.number().min(0).default(0),
   images: z.array(imageSchema).default([]),
   totalInventory: z.number().int().min(0),
 });

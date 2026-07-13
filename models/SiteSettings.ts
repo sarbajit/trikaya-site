@@ -25,6 +25,7 @@ export interface ISiteSettings extends Document {
   b2bEnabled: boolean;
   invoicePrefix: string;
   taxSettings?: ITaxSettings;
+  childMaxAge: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,6 +53,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
       type: new Schema<ITaxSettings>({ gstin: String }, { _id: false }),
       required: false,
     },
+    childMaxAge: { type: Number, required: true, default: 12, min: 0 },
   },
   { timestamps: true }
 );

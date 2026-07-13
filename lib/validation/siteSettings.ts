@@ -28,6 +28,7 @@ export const siteSettingsUpdateSchema = z.object({
   b2bEnabled: z.boolean(),
   invoicePrefix: z.string().trim().min(1, "Invoice prefix is required"),
   taxSettings: taxSettingsSchema.optional(),
+  childMaxAge: z.number().int().min(0, "Must be 0 or greater"),
 });
 
 export type SiteSettingsUpdateInput = z.infer<typeof siteSettingsUpdateSchema>;

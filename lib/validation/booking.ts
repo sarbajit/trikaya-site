@@ -4,17 +4,21 @@ import { objectIdSchema } from "@/lib/validation/shared";
 
 const isoDateSchema = z.string().refine(isValidISODateString, "Must be a valid date (yyyy-MM-dd)");
 
-export const quoteRequestSchema = z.object({
+const roomSelectionSchema = z.object({
+  roomTypeId: objectIdSchema,
+  adults: z.number().int().min(1),
+  childAges: z.array(z.number().int().min(0).max(17)).max(10).default([]),
+});
+
+export const bookingQuoteRequestSchema = z.object({
   checkIn: isoDateSchema,
   checkOut: isoDateSchema,
-  guests: z.number().int().min(1),
+  rooms: z.array(roomSelectionSchema).min(1, "At least one room is required"),
 });
 
-export type QuoteRequestInput = z.infer<typeof quoteRequestSchema>;
+export type BookingQuoteRequestInput = z.infer<typeof bookingQuoteRequestSchema>;
 
-export const createBookingSchema = quoteRequestSchema.extend({
-  roomTypeId: objectIdSchema,
-});
+export const createBookingSchema = bookingQuoteRequestSchema;
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 

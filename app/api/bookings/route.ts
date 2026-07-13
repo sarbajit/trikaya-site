@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { parseISODate } from "@/lib/date-helpers";
-import { getRoomTypeQuote, InvalidQuoteRequestError, RoomTypeNotFoundError } from "@/lib/pricing";
+import { getBookingQuote, InvalidQuoteRequestError, RoomTypeNotFoundError } from "@/lib/pricing";
 import { createBookingSchema } from "@/lib/validation/booking";
 import { Booking } from "@/models/Booking";
 
@@ -18,11 +18,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { roomTypeId, checkIn, checkOut, guests } = parsed.data;
+  const { checkIn, checkOut, rooms } = parsed.data;
 
   let quote;
   try {
-    quote = await getRoomTypeQuote({ roomTypeId, checkIn, checkOut, guests, session });
+    quote = await getBookingQuote({ checkIn, checkOut, rooms, session });
   } catch (error) {
     if (error instanceof RoomTypeNotFoundError) {
       return NextResponse.json({ error: "Room type not found" }, { status: 404 });
@@ -33,11 +33,12 @@ export async function POST(request: Request) {
     throw error;
   }
 
-  if (quote.guestsExceedOccupancy) {
-    return NextResponse.json({ error: "Guests exceed room occupancy" }, { status: 400 });
+  const occupancyError = quote.rooms.find((r) => r.occupancyError)?.occupancyError;
+  if (occupancyError) {
+    return NextResponse.json({ error: occupancyError }, { status: 400 });
   }
   if (!quote.isAvailable) {
-    return NextResponse.json({ error: "Room is not available for the selected dates" }, { status: 409 });
+    return NextResponse.json({ error: "Rooms are not available for the selected dates" }, { status: 409 });
   }
 
   await connectDB();
@@ -46,11 +47,21 @@ export async function POST(request: Request) {
     userId: session.user.role === "customer" ? session.user.id : undefined,
     agentId: session.user.role === "agent" ? session.user.id : undefined,
     propertyId: quote.propertyId,
-    roomTypeId,
     checkIn: parseISODate(checkIn),
     checkOut: parseISODate(checkOut),
-    guests,
-    pricingModelUsed: quote.pricingModel,
+    rooms: quote.rooms.map((room) => ({
+      roomTypeId: room.roomTypeId,
+      pricingModel: room.pricingModel,
+      adults: room.adults,
+      childAges: room.childAges,
+      nightlyRates: room.nightlyRates.map((night) => ({
+        date: night.date,
+        adultRate: night.adultRate,
+        childRate: night.childRate,
+        amount: night.amount,
+      })),
+      roomTotal: room.roomTotal,
+    })),
     totalAmount: quote.totalAmount,
     currency: quote.currency,
     paymentStatus: "pending",

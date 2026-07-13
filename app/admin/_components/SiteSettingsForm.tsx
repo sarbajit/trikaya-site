@@ -32,6 +32,7 @@ interface SiteSettingsData {
   b2bEnabled: boolean;
   invoicePrefix: string;
   taxSettings?: { gstin?: string };
+  childMaxAge: number;
 }
 
 const DEFAULT_COLORS: Record<"primaryColor" | "secondaryColor" | "accentColor", string> = {
@@ -249,6 +250,30 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
               onChange={(e) => update("taxSettings", { gstin: e.target.value })}
               className="w-60"
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Child pricing</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="childMaxAge">Child rate applies up to age</Label>
+            <Input
+              id="childMaxAge"
+              type="number"
+              min={0}
+              value={form.childMaxAge}
+              onChange={(e) => update("childMaxAge", Number(e.target.value))}
+              className="w-28"
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Guests aged 5 up to this age are charged each room type&apos;s child rate. Under 5 stays free. Above
+              this age is charged the adult rate.
+            </p>
           </div>
         </CardContent>
       </Card>

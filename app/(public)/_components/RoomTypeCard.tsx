@@ -5,9 +5,7 @@ import { useSession } from "next-auth/react";
 import { Users } from "lucide-react";
 import { PropertyImage } from "./PropertyImage";
 import { Button } from "@/components/ui/button";
-
-/** Custom event RoomTypeCard broadcasts on "Select"; BookingWidget listens for it. */
-export const SELECT_ROOM_EVENT = "trikaya:select-room";
+import { useOptionalBookingCart } from "./BookingCartContext";
 
 export interface RoomTypeCardData {
   id: string;
@@ -20,8 +18,9 @@ export interface RoomTypeCardData {
 export function RoomTypeCard({ room, propertySlug }: { room: RoomTypeCardData; propertySlug: string }) {
   const { status } = useSession();
   const router = useRouter();
+  const cart = useOptionalBookingCart();
 
-  function handleSelect() {
+  function handleAdd() {
     // Session status starts as "loading" for a moment on first paint; acting
     // before it resolves could send a logged-out user straight to the
     // property page instead of the login page. The button stays disabled
@@ -35,13 +34,18 @@ export function RoomTypeCard({ room, propertySlug }: { room: RoomTypeCardData; p
       return;
     }
 
-    // Already on the property page (booking widget present in the DOM): just
-    // select in place. Otherwise (e.g. the single-property homepage, which
-    // has no booking widget of its own) navigate to the property page.
-    const widget = document.getElementById("booking-widget");
-    if (widget) {
-      window.dispatchEvent(new CustomEvent(SELECT_ROOM_EVENT, { detail: room.id }));
-      widget.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Already on the property page (a cart is present): add in place.
+    // Otherwise (e.g. the single-property homepage, which has no booking
+    // widget of its own) navigate to the property page, which adds this
+    // room to a fresh cart on arrival via the ?room= param.
+    if (cart) {
+      cart.addRoom({
+        roomTypeId: room.id,
+        roomTypeName: room.name,
+        maxOccupancy: room.maxOccupancy,
+        pricingModel: room.pricingModel,
+      });
+      document.getElementById("booking-widget")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
 
@@ -69,8 +73,8 @@ export function RoomTypeCard({ room, propertySlug }: { room: RoomTypeCardData; p
             / {room.pricingModel === "per_night" ? "night" : "person / night"}
           </span>
         </div>
-        <Button size="sm" onClick={handleSelect} disabled={status === "loading"}>
-          Select
+        <Button size="sm" onClick={handleAdd} disabled={status === "loading"}>
+          Add room
         </Button>
       </div>
     </div>

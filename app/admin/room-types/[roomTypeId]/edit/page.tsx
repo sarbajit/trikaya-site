@@ -19,6 +19,8 @@ export default async function EditRoomTypePage({ params }: { params: Promise<{ r
     pricingModel: roomType.pricingModel,
     basePriceB2C: String(roomType.basePriceB2C),
     basePriceB2B: String(roomType.basePriceB2B),
+    childPriceB2C: String(roomType.childPriceB2C),
+    childPriceB2B: String(roomType.childPriceB2B),
     images: roomType.images.map((image) => ({ url: image.url, alt: image.alt })),
     totalInventory: String(roomType.totalInventory),
   };

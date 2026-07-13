@@ -7,18 +7,24 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface BookingRoomSummary {
+  roomTypeName: string | null;
+  adults: number;
+  childAges: number[];
+  roomTotal: number;
+}
+
 interface BookingDetails {
   bookingId: string;
   status: "pending" | "confirmed" | "cancelled" | "completed";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
   checkIn: string;
   checkOut: string;
-  guests: number;
   totalAmount: number;
   currency: string;
   propertyName: string | null;
   propertySlug: string | null;
-  roomTypeName: string | null;
+  rooms: BookingRoomSummary[];
 }
 
 const POLL_INTERVAL_MS = 2000;
@@ -127,21 +133,22 @@ export function BookingConfirmation({ bookingId }: { bookingId: string }) {
               <dd className="font-medium text-foreground">{booking.propertyName}</dd>
             </div>
           )}
-          {booking.roomTypeName && (
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">Room</dt>
-              <dd className="font-medium text-foreground">{booking.roomTypeName}</dd>
+          {booking.rooms.map((room, index) => (
+            <div key={index} className="flex justify-between">
+              <dt className="text-muted-foreground">{room.roomTypeName ?? "Room"}</dt>
+              <dd className="font-medium text-foreground">
+                {room.adults} adult{room.adults > 1 ? "s" : ""}
+                {room.childAges.length > 0
+                  ? `, ${room.childAges.length} child${room.childAges.length > 1 ? "ren" : ""}`
+                  : ""}
+              </dd>
             </div>
-          )}
+          ))}
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Dates</dt>
             <dd className="font-medium text-foreground">
               {booking.checkIn} &rarr; {booking.checkOut}
             </dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-muted-foreground">Guests</dt>
-            <dd className="font-medium text-foreground">{booking.guests}</dd>
           </div>
           <div className="flex justify-between border-t border-border pt-2 text-base">
             <dt className="font-medium text-foreground">Total paid</dt>

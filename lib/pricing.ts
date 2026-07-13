@@ -1,14 +1,19 @@
 /**
  * Single shared server-side pricing/availability engine (spec §5.2/5.3).
  *
- * This module is the ONLY place a quote is computed. Both the future
- * availability-check API and the future booking-creation API (Phase 7, not
- * built yet) must call getRoomTypeQuote() rather than re-deriving price or
- * availability, so a quoted price and a charged price can never drift.
+ * This module is the ONLY place a quote is computed. Both the availability-
+ * check API and the booking-creation API call getBookingQuote() rather than
+ * re-deriving price or availability, so a quoted price and a charged price
+ * can never drift.
+ *
+ * A booking can span multiple rooms, possibly of different room types, all
+ * within one property and one shared date range. getBookingQuote() resolves
+ * B2B eligibility internally (never accepted as a caller-supplied flag) and
+ * validates occupancy/child-age rules the same way for every caller.
  *
  * Non-goal: this module does not perform atomic inventory locking. At
- * booking-confirmation time, Phase 7 must still do an atomic conditional
- * update (e.g. increment `booked` guarded by `booked + blocked < totalUnits`)
+ * booking-confirmation time, the webhook still does an atomic conditional
+ * update (increment `booked` guarded by `booked + blocked + count <= totalUnits`)
  * to avoid a race between quote time and confirm time — this function only
  * answers "as of right now".
  */
@@ -48,6 +53,56 @@ export async function getB2BEligibility(session: Session | null | undefined): Pr
   await connectDB();
   const settings = await getSiteSettings();
   return settings.b2bEnabled === true;
+}
+
+/** Below this age a child is free (still counts toward occupancy). Fixed business rule, not admin-configurable. */
+export const CHILD_MIN_AGE = 5;
+
+/**
+ * Resolves the total charge for one room, one night. per_night rooms are a
+ * flat per-room rate regardless of headcount. per_person_per_night rooms
+ * charge each adult the adult rate, and each child banded by age:
+ * under CHILD_MIN_AGE is free, from CHILD_MIN_AGE up to childMaxAge gets the
+ * child rate, above childMaxAge is charged the adult rate.
+ */
+export function computeRoomNightAmount(
+  pricingModel: PricingModel,
+  adults: number,
+  childAges: number[],
+  adultRate: number,
+  childRate: number,
+  childMaxAge: number
+): number {
+  if (pricingModel === "per_night") {
+    return adultRate;
+  }
+  const childrenCharge = childAges.reduce((sum, age) => {
+    if (age < CHILD_MIN_AGE) return sum;
+    if (age <= childMaxAge) return sum + childRate;
+    return sum + adultRate;
+  }, 0);
+  return adults * adultRate + childrenCharge;
+}
+
+/**
+ * Centralizes the occupancy rules so the quote engine and the booking-
+ * creation route apply identical checks: at least 1 adult, total heads
+ * (adults + all children, including infants) within maxOccupancy, and at
+ * least 2 total occupants when the room is priced per person per night.
+ */
+export function validateRoomOccupancy(
+  pricingModel: PricingModel,
+  adults: number,
+  childAges: number[],
+  maxOccupancy: number
+): string | null {
+  if (adults < 1) return "Each room needs at least 1 adult";
+  const totalOccupants = adults + childAges.length;
+  if (totalOccupants > maxOccupancy) return `This room allows up to ${maxOccupancy} guests`;
+  if (pricingModel === "per_person_per_night" && totalOccupants < 2) {
+    return "This room's pricing requires at least 2 guests";
+  }
+  return null;
 }
 
 type RatePlanCandidate = Pick<
@@ -137,55 +192,64 @@ export function resolveAvailableUnits(
   return Math.max(0, availabilityDoc.totalUnits - availabilityDoc.booked - availabilityDoc.blocked);
 }
 
-export interface QuoteInput {
+export interface RoomSelection {
   roomTypeId: string;
+  adults: number;
+  childAges: number[];
+}
+
+export interface BookingQuoteInput {
   checkIn: string;
   checkOut: string;
-  guests: number;
+  rooms: RoomSelection[];
   session: Session | null | undefined;
 }
 
-export interface NightlyBreakdown {
+export interface RoomNightlyRate {
   date: string;
-  rate: number;
+  adultRate: number;
+  childRate: number;
   source: "rateplan" | "base";
   ratePlanId?: string;
   ratePlanLabel?: string;
-  availableUnits: number;
+  amount: number;
 }
 
-export interface RoomTypeQuote {
+export interface RoomQuote {
   roomTypeId: string;
-  propertyId: string;
+  roomTypeName: string;
   pricingModel: PricingModel;
-  isB2B: boolean;
-  guests: number;
+  adults: number;
+  childAges: number[];
   maxOccupancy: number;
+  nightlyRates: RoomNightlyRate[];
+  roomTotal: number;
+  occupancyError: string | null;
+}
+
+export interface BookingQuote {
+  propertyId: string;
+  isB2B: boolean;
   nights: number;
   currency: "INR";
-  nightlyBreakdown: NightlyBreakdown[];
-  subtotal: number;
+  rooms: RoomQuote[];
   totalAmount: number;
   isAvailable: boolean;
-  guestsExceedOccupancy: boolean;
   unavailableDates: string[];
+  hasOccupancyErrors: boolean;
 }
 
 /**
- * The single shared entry point. Resolves B2B eligibility internally (never
- * accepted as a caller-supplied flag) so a quote can never be spoofed into
- * B2B pricing by a client-controlled parameter.
+ * The single shared entry point for pricing a (possibly multi-room,
+ * possibly multi-room-type) booking. All rooms must belong to the same
+ * property — that property is derived from the rooms themselves (never
+ * accepted as a caller-supplied propertyId) and mismatches are rejected.
  */
-export async function getRoomTypeQuote(input: QuoteInput): Promise<RoomTypeQuote> {
+export async function getBookingQuote(input: BookingQuoteInput): Promise<BookingQuote> {
   await connectDB();
 
-  if (!Number.isInteger(input.guests) || input.guests < 1) {
-    throw new InvalidQuoteRequestError("guests must be a positive integer");
-  }
-
-  const roomType = await RoomType.findById(input.roomTypeId);
-  if (!roomType) {
-    throw new RoomTypeNotFoundError(input.roomTypeId);
+  if (input.rooms.length === 0) {
+    throw new InvalidQuoteRequestError("At least one room is required");
   }
 
   let nights: Date[];
@@ -196,61 +260,134 @@ export async function getRoomTypeQuote(input: QuoteInput): Promise<RoomTypeQuote
   }
 
   const isB2B = await getB2BEligibility(input.session);
+  const settings = await getSiteSettings();
+  const childMaxAge = settings.childMaxAge;
+
   const rangeStart = nights[0];
   const rangeEnd = toDateOnlyUTC(input.checkOut);
 
+  const roomTypeIds = [...new Set(input.rooms.map((r) => r.roomTypeId))];
+  const roomTypes = await RoomType.find({ _id: { $in: roomTypeIds } });
+  const roomTypeById = new Map(roomTypes.map((rt) => [String(rt._id), rt]));
+
+  for (const id of roomTypeIds) {
+    if (!roomTypeById.has(id)) {
+      throw new RoomTypeNotFoundError(id);
+    }
+  }
+
+  const firstRoomType = roomTypeById.get(roomTypeIds[0])!;
+  const propertyId = String(firstRoomType.propertyId);
+  for (const rt of roomTypes) {
+    if (String(rt.propertyId) !== propertyId) {
+      throw new InvalidQuoteRequestError("All rooms must belong to the same property");
+    }
+  }
+
   const [ratePlans, availabilityDocs] = await Promise.all([
     RatePlan.find({
-      roomTypeId: roomType._id,
+      roomTypeId: { $in: roomTypeIds },
       startDate: { $lt: rangeEnd },
       endDate: { $gt: rangeStart },
     }),
     Availability.find({
-      roomTypeId: roomType._id,
+      roomTypeId: { $in: roomTypeIds },
       date: { $gte: rangeStart, $lt: rangeEnd },
     }),
   ]);
 
-  const availabilityByDate = new Map<string, IAvailability>(
-    availabilityDocs.map((doc) => [formatISODate(toDateOnlyUTC(doc.date)), doc])
-  );
+  const ratePlansByRoomType = new Map<string, IRatePlan[]>();
+  for (const plan of ratePlans) {
+    const key = String(plan.roomTypeId);
+    const list = ratePlansByRoomType.get(key) ?? [];
+    list.push(plan);
+    ratePlansByRoomType.set(key, list);
+  }
 
-  const guestsExceedOccupancy = input.guests > roomType.maxOccupancy;
-  const unavailableDates: string[] = [];
+  const availabilityByRoomTypeDate = new Map<string, IAvailability>();
+  for (const doc of availabilityDocs) {
+    availabilityByRoomTypeDate.set(`${doc.roomTypeId}:${formatISODate(toDateOnlyUTC(doc.date))}`, doc);
+  }
 
-  const nightlyBreakdown: NightlyBreakdown[] = nights.map((date) => {
-    const iso = formatISODate(date);
-    const { rate, source, ratePlanId, ratePlanLabel } = resolveNightlyRate(
-      ratePlans,
-      date,
-      isB2B,
-      roomType.basePriceB2C,
-      roomType.basePriceB2B
+  const countByRoomType = new Map<string, number>();
+  for (const selection of input.rooms) {
+    countByRoomType.set(selection.roomTypeId, (countByRoomType.get(selection.roomTypeId) ?? 0) + 1);
+  }
+
+  const unavailableDatesSet = new Set<string>();
+  for (const [roomTypeId, count] of countByRoomType) {
+    const roomType = roomTypeById.get(roomTypeId)!;
+    for (const date of nights) {
+      const iso = formatISODate(date);
+      const availableUnits = resolveAvailableUnits(
+        availabilityByRoomTypeDate.get(`${roomTypeId}:${iso}`),
+        roomType.totalInventory
+      );
+      if (availableUnits < count) unavailableDatesSet.add(iso);
+    }
+  }
+
+  let hasOccupancyErrors = false;
+  const roomQuotes: RoomQuote[] = input.rooms.map((selection) => {
+    const roomType = roomTypeById.get(selection.roomTypeId)!;
+    const occupancyError = validateRoomOccupancy(
+      roomType.pricingModel,
+      selection.adults,
+      selection.childAges,
+      roomType.maxOccupancy
     );
-    const availableUnits = resolveAvailableUnits(availabilityByDate.get(iso), roomType.totalInventory);
-    if (availableUnits < 1) unavailableDates.push(iso);
+    if (occupancyError) hasOccupancyErrors = true;
 
-    return { date: iso, rate, source, ratePlanId, ratePlanLabel, availableUnits };
+    const candidatePlans = ratePlansByRoomType.get(selection.roomTypeId) ?? [];
+    const childRate = isB2B ? roomType.childPriceB2B : roomType.childPriceB2C;
+
+    const nightlyRates: RoomNightlyRate[] = nights.map((date) => {
+      const iso = formatISODate(date);
+      const { rate: adultRate, source, ratePlanId, ratePlanLabel } = resolveNightlyRate(
+        candidatePlans,
+        date,
+        isB2B,
+        roomType.basePriceB2C,
+        roomType.basePriceB2B
+      );
+      const amount = computeRoomNightAmount(
+        roomType.pricingModel,
+        selection.adults,
+        selection.childAges,
+        adultRate,
+        childRate,
+        childMaxAge
+      );
+      return { date: iso, adultRate, childRate, source, ratePlanId, ratePlanLabel, amount };
+    });
+
+    const roomTotal = nightlyRates.reduce((sum, n) => sum + n.amount, 0);
+
+    return {
+      roomTypeId: selection.roomTypeId,
+      roomTypeName: roomType.name,
+      pricingModel: roomType.pricingModel,
+      adults: selection.adults,
+      childAges: selection.childAges,
+      maxOccupancy: roomType.maxOccupancy,
+      nightlyRates,
+      roomTotal,
+      occupancyError,
+    };
   });
 
-  const perNightTotal = nightlyBreakdown.reduce((sum, n) => sum + n.rate, 0);
-  const subtotal =
-    roomType.pricingModel === "per_person_per_night" ? perNightTotal * input.guests : perNightTotal;
+  const totalAmount = roomQuotes.reduce((sum, r) => sum + r.roomTotal, 0);
+  const unavailableDates = [...unavailableDatesSet].sort();
 
   return {
-    roomTypeId: String(roomType._id),
-    propertyId: String(roomType.propertyId),
-    pricingModel: roomType.pricingModel,
+    propertyId,
     isB2B,
-    guests: input.guests,
-    maxOccupancy: roomType.maxOccupancy,
     nights: nights.length,
     currency: "INR",
-    nightlyBreakdown,
-    subtotal,
-    totalAmount: subtotal,
-    isAvailable: unavailableDates.length === 0 && !guestsExceedOccupancy,
-    guestsExceedOccupancy,
+    rooms: roomQuotes,
+    totalAmount,
+    isAvailable: unavailableDates.length === 0 && !hasOccupancyErrors,
     unavailableDates,
+    hasOccupancyErrors,
   };
 }

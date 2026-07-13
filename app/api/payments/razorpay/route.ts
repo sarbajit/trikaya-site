@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { formatISODate } from "@/lib/date-helpers";
-import { getRoomTypeQuote } from "@/lib/pricing";
+import { getBookingQuote } from "@/lib/pricing";
 import { createOrder } from "@/lib/razorpay";
 import { createPaymentOrderSchema } from "@/lib/validation/booking";
 import { Booking } from "@/models/Booking";
@@ -36,15 +36,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Booking is not payable" }, { status: 409 });
   }
 
-  const quote = await getRoomTypeQuote({
-    roomTypeId: booking.roomTypeId.toString(),
+  const quote = await getBookingQuote({
     checkIn: formatISODate(booking.checkIn),
     checkOut: formatISODate(booking.checkOut),
-    guests: booking.guests,
+    rooms: booking.rooms.map((room) => ({
+      roomTypeId: room.roomTypeId.toString(),
+      adults: room.adults,
+      childAges: room.childAges,
+    })),
     session,
   });
   if (!quote.isAvailable) {
-    return NextResponse.json({ error: "Room is no longer available for these dates" }, { status: 409 });
+    return NextResponse.json({ error: "Rooms are no longer available for these dates" }, { status: 409 });
   }
 
   const amountPaise = Math.round(booking.totalAmount * 100);

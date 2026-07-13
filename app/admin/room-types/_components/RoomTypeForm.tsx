@@ -16,6 +16,8 @@ export interface RoomTypeFormData {
   pricingModel: "per_night" | "per_person_per_night";
   basePriceB2C: string;
   basePriceB2B: string;
+  childPriceB2C: string;
+  childPriceB2B: string;
   images: GalleryImage[];
   totalInventory: string;
 }
@@ -26,6 +28,8 @@ export const EMPTY_ROOM_TYPE_FORM: RoomTypeFormData = {
   pricingModel: "per_night",
   basePriceB2C: "",
   basePriceB2B: "",
+  childPriceB2C: "0",
+  childPriceB2B: "0",
   images: [],
   totalInventory: "1",
 };
@@ -61,6 +65,8 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
       pricingModel: form.pricingModel,
       basePriceB2C: Number(form.basePriceB2C),
       basePriceB2B: Number(form.basePriceB2B),
+      childPriceB2C: Number(form.childPriceB2C),
+      childPriceB2B: Number(form.childPriceB2B),
       images: form.images,
       totalInventory: Number(form.totalInventory),
     };
@@ -170,6 +176,34 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
               />
             </div>
           </div>
+          {form.pricingModel === "per_person_per_night" && (
+            <div className="flex gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="childPriceB2C">Child rate (B2C, ₹)</Label>
+                <Input
+                  id="childPriceB2C"
+                  type="number"
+                  min={0}
+                  value={form.childPriceB2C}
+                  onChange={(e) => update("childPriceB2C", e.target.value)}
+                  className="w-32"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="childPriceB2B">Child rate (B2B, ₹)</Label>
+                <Input
+                  id="childPriceB2B"
+                  type="number"
+                  min={0}
+                  value={form.childPriceB2B}
+                  onChange={(e) => update("childPriceB2B", e.target.value)}
+                  className="w-32"
+                  required
+                />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

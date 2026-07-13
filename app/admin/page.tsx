@@ -21,6 +21,7 @@ export default async function AdminSettingsPage() {
     b2bEnabled: settings.b2bEnabled,
     invoicePrefix: settings.invoicePrefix,
     taxSettings: settings.taxSettings ? { gstin: settings.taxSettings.gstin ?? "" } : undefined,
+    childMaxAge: settings.childMaxAge,
   };
 
   return (

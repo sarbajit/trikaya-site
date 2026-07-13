@@ -102,6 +102,56 @@ number using invoicePrefix) and email it automatically via the configured email
 provider. Make the same invoice downloadable from /account/bookings/[id].
 ```
 
+### Phase 8.5 — Admin Panel Visual Overhaul (no functional changes)
+Plan mode. The admin panel currently works correctly but looks dated — same
+Radix UI + lucide-react stack, but inconsistent spacing, layout, and visual
+hierarchy across pages. This phase is presentation-only: every existing
+feature, API route, validation rule, and data-fetching call must keep working
+exactly as it does now. Do not touch business logic, route handlers, or prop
+contracts between components and their data — only restructure markup, styling,
+and shared UI primitives.
+
+Before changing anything, do an inventory pass: list every existing admin page
+and the ad-hoc UI patterns each one uses (tables, forms, buttons, badges,
+dialogs, empty states) so we can see what's duplicated vs. reusable.
+
+Then build a small shared admin component set (on top of the existing Radix
+primitives — consider adopting shadcn/ui conventions since it's Radix +
+Tailwind under the hood and directly compatible with what's already installed):
+  - Consistent app shell: collapsible sidebar grouped by section (Dashboard,
+    Properties, Bookings, Agents, Reviews, Content, Settings), topbar with
+    admin user menu, breadcrumbs.
+  - A shared DataTable (sortable columns, pagination, empty state, loading
+    skeleton) and retrofit every existing admin list view (properties,
+    bookings, agents, reviews, etc.) onto it.
+  - Shared form layout primitives (label + field + error message pattern) and
+    retrofit existing forms onto them, keeping the same fields and validation.
+  - Status badges/pills for booking status, agent approval status, review
+    moderation status — consistent color coding, used everywhere that status
+    already appears.
+  - Shared Dialog pattern (Radix Dialog) for confirmations (approve/reject
+    agent, cancel booking, delete property) replacing any ad-hoc confirm()
+    calls or one-off modals.
+  - Toast notifications (Radix Toast) for action success/failure, replacing
+    any inline "Saved!" text or alert()s.
+  - Loading skeletons instead of blank screens or spinner-only states.
+
+Admin panel gets its own clean, neutral base theme (grays/whites, ideally
+dark-mode-ready) — do NOT apply SiteSettings.primaryColor/secondaryColor as
+the dominant palette here. Use the brand colors only as a small accent:
+primary action buttons and the active sidebar nav indicator. This is
+different from the public site, where those colors should be dominant.
+
+Go page by page through the existing admin panel (branding/site settings,
+properties, room types, rate plans, availability calendar, agent approval
+queue, bookings, reviews moderation, static pages, contact settings) and
+apply the shared primitives. After each page, confirm every button, form
+submit, and data load still behaves identically to before — this is a visual
+refactor, not a rebuild. Note: there is currently no dedicated Dashboard/KPI
+landing page for admin (spec section 3 lists one, but no phase has built it
+yet) — flag this back to me rather than building new KPI logic under this
+visual-only phase; we'll scope that as its own phase separately.
+
 ### Phase 9 — Booking History, Account Pages, Reviews
 ```
 Plan mode. Build /account/bookings (list + detail + invoice download) and

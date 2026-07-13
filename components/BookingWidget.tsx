@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, Plus, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SELECT_ROOM_EVENT, type RoomTypeCardData } from "@/app/(public)/_components/RoomTypeCard";
+import { useBookingCart } from "@/app/(public)/_components/BookingCartContext";
+import { type RoomTypeCardData } from "@/app/(public)/_components/RoomTypeCard";
 
 declare global {
   interface Window {
@@ -31,21 +31,24 @@ interface RazorpayOptions {
   modal?: { ondismiss?: () => void };
 }
 
-interface NightlyBreakdown {
-  date: string;
-  rate: number;
+interface QuoteRoom {
+  roomTypeId: string;
+  roomTypeName: string;
+  roomTotal: number;
+  occupancyError: string | null;
 }
 
-interface RoomTypeQuote {
+interface BookingQuote {
   nights: number;
   currency: string;
-  nightlyBreakdown: NightlyBreakdown[];
-  subtotal: number;
+  rooms: QuoteRoom[];
   totalAmount: number;
   isAvailable: boolean;
-  guestsExceedOccupancy: boolean;
   unavailableDates: string[];
+  hasOccupancyErrors: boolean;
 }
+
+const DEFAULT_CHILD_AGE = 8;
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
@@ -65,25 +68,21 @@ function loadRazorpayScript(): Promise<void> {
   });
 }
 
-export function BookingWidget({ rooms }: { rooms: RoomTypeCardData[] }) {
+export function BookingWidget({ rooms: catalog }: { rooms: RoomTypeCardData[] }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const roomFromUrl = searchParams.get("room");
+  const appliedUrlRoom = useRef(false);
 
-  const [selectedRoomId, setSelectedRoomId] = useState<string>(
-    (roomFromUrl && rooms.some((r) => r.id === roomFromUrl) ? roomFromUrl : rooms[0]?.id) ?? ""
-  );
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState(1);
-  const [quote, setQuote] = useState<RoomTypeQuote | null>(null);
+  const cart = useBookingCart();
+  const { checkIn, checkOut, setCheckIn, setCheckOut, rooms, addRoom, updateRoom, removeRoom } = cart;
+
+  const [quote, setQuote] = useState<BookingQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
-
-  const selectedRoom = useMemo(() => rooms.find((r) => r.id === selectedRoomId), [rooms, selectedRoomId]);
 
   function resetQuote() {
     setQuote(null);
@@ -92,38 +91,39 @@ export function BookingWidget({ rooms }: { rooms: RoomTypeCardData[] }) {
   }
 
   useEffect(() => {
-    function handleSelectRoom(event: Event) {
-      const roomId = (event as CustomEvent<string>).detail;
-      if (rooms.some((r) => r.id === roomId)) {
-        setSelectedRoomId(roomId);
-        resetQuote();
-      }
-    }
-    window.addEventListener(SELECT_ROOM_EVENT, handleSelectRoom);
-    return () => window.removeEventListener(SELECT_ROOM_EVENT, handleSelectRoom);
-  }, [rooms]);
-
-  useEffect(() => {
-    if (roomFromUrl) {
-      document.getElementById("booking-widget")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    if (appliedUrlRoom.current) return;
+    if (!roomFromUrl) return;
+    const room = catalog.find((r) => r.id === roomFromUrl);
+    if (!room) return;
+    appliedUrlRoom.current = true;
+    addRoom({
+      roomTypeId: room.id,
+      roomTypeName: room.name,
+      maxOccupancy: room.maxOccupancy,
+      pricingModel: room.pricingModel,
+    });
+    document.getElementById("booking-widget")?.scrollIntoView({ behavior: "smooth", block: "start" });
     // Only run once on mount for the URL that brought the user here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleCheckAvailability() {
-    if (!selectedRoom || !checkIn || !checkOut) {
-      setQuoteError("Select a room and both dates.");
+    if (rooms.length === 0 || !checkIn || !checkOut) {
+      setQuoteError("Add at least one room and select both dates.");
       return;
     }
     setQuoteLoading(true);
     setQuoteError(null);
     setQuote(null);
     try {
-      const response = await fetch(`/api/room-types/${selectedRoom.id}/quote`, {
+      const response = await fetch("/api/bookings/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ checkIn, checkOut, guests }),
+        body: JSON.stringify({
+          checkIn,
+          checkOut,
+          rooms: rooms.map((r) => ({ roomTypeId: r.roomTypeId, adults: r.adults, childAges: r.childAges })),
+        }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -139,14 +139,18 @@ export function BookingWidget({ rooms }: { rooms: RoomTypeCardData[] }) {
   }
 
   async function handleBookAndPay() {
-    if (!selectedRoom || !quote || !quote.isAvailable) return;
+    if (!quote || !quote.isAvailable) return;
     setBookingLoading(true);
     setBookingError(null);
     try {
       const bookingResponse = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomTypeId: selectedRoom.id, checkIn, checkOut, guests }),
+        body: JSON.stringify({
+          checkIn,
+          checkOut,
+          rooms: rooms.map((r) => ({ roomTypeId: r.roomTypeId, adults: r.adults, childAges: r.childAges })),
+        }),
       });
       const bookingData = await bookingResponse.json();
       if (!bookingResponse.ok) {
@@ -173,7 +177,6 @@ export function BookingWidget({ rooms }: { rooms: RoomTypeCardData[] }) {
         currency: orderData.currency,
         order_id: orderData.razorpayOrderId,
         name: "Trikaya",
-        description: selectedRoom.name,
         prefill: { name: session?.user?.name, email: session?.user?.email },
         handler: () => {
           router.push(`/booking/${bookingData.bookingId}/confirmation`);
@@ -204,7 +207,7 @@ export function BookingWidget({ rooms }: { rooms: RoomTypeCardData[] }) {
     return (
       <aside id="booking-widget" className="h-fit scroll-mt-24 rounded-md border border-border bg-card p-5 lg:sticky lg:top-24">
         <p className="flex items-center gap-2 font-display text-lg text-foreground">
-          <CalendarClock className="size-4 text-primary" /> Check availability
+          <CalendarClock className="size-4 text-primary" /> Your booking
         </p>
         <p className="mt-2 text-sm text-muted-foreground">Log in to check availability and book instantly.</p>
         <Button asChild className="mt-4 w-full">
@@ -220,44 +223,22 @@ export function BookingWidget({ rooms }: { rooms: RoomTypeCardData[] }) {
     return (
       <aside id="booking-widget" className="h-fit scroll-mt-24 rounded-md border border-border bg-card p-5 lg:sticky lg:top-24">
         <p className="flex items-center gap-2 font-display text-lg text-foreground">
-          <CalendarClock className="size-4 text-primary" /> Check availability
+          <CalendarClock className="size-4 text-primary" /> Your booking
         </p>
         <p className="mt-2 text-sm text-muted-foreground">Bookings are available for customer and agent accounts.</p>
       </aside>
     );
   }
 
+  const quoteByRoomTypeId = new Map((quote?.rooms ?? []).map((r) => [r.roomTypeId, r]));
+
   return (
     <aside id="booking-widget" className="h-fit scroll-mt-24 rounded-md border border-border bg-card p-5 lg:sticky lg:top-24">
       <p className="flex items-center gap-2 font-display text-lg text-foreground">
-        <CalendarClock className="size-4 text-primary" /> Check availability
+        <CalendarClock className="size-4 text-primary" /> Your booking
       </p>
 
       <div className="mt-4 flex flex-col gap-3">
-        <div>
-          <Label htmlFor="room">Room</Label>
-          <Select
-            value={selectedRoomId}
-            onValueChange={(value) => {
-              setSelectedRoomId(value);
-              const room = rooms.find((r) => r.id === value);
-              if (room && guests > room.maxOccupancy) setGuests(room.maxOccupancy);
-              resetQuote();
-            }}
-          >
-            <SelectTrigger id="room" className="mt-1">
-              <SelectValue placeholder="Select a room" />
-            </SelectTrigger>
-            <SelectContent>
-              {rooms.map((room) => (
-                <SelectItem key={room.id} value={room.id}>
-                  {room.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="checkIn">Check-in</Label>
@@ -289,27 +270,119 @@ export function BookingWidget({ rooms }: { rooms: RoomTypeCardData[] }) {
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="guests">Guests</Label>
-          <Select
-            value={String(guests)}
-            onValueChange={(value) => {
-              setGuests(Number(value));
-              resetQuote();
-            }}
-          >
-            <SelectTrigger id="guests" className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: selectedRoom?.maxOccupancy ?? 1 }, (_, i) => i + 1).map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {n} guest{n > 1 ? "s" : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {rooms.length === 0 && (
+          <p className="rounded-md border border-dashed border-border p-3 text-sm text-muted-foreground">
+            Add a room from the list below to start building your booking.
+          </p>
+        )}
+
+        {rooms.map((room) => {
+          const maxChildren = Math.max(0, room.maxOccupancy - room.adults);
+          const roomQuote = quoteByRoomTypeId.get(room.roomTypeId);
+          return (
+            <div key={room.key} className="rounded-md border border-border p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">{room.roomTypeName}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    removeRoom(room.key);
+                    resetQuote();
+                  }}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+
+              <div className="mt-2 flex gap-3">
+                <div>
+                  <Label htmlFor={`adults-${room.key}`}>Adults</Label>
+                  <Input
+                    id={`adults-${room.key}`}
+                    type="number"
+                    min={1}
+                    max={room.maxOccupancy - room.childAges.length}
+                    value={room.adults}
+                    onChange={(e) => {
+                      updateRoom(room.key, { adults: Number(e.target.value) });
+                      resetQuote();
+                    }}
+                    className="mt-1 w-20"
+                  />
+                </div>
+                <div>
+                  <Label>Children</Label>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-sm text-foreground">{room.childAges.length}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      disabled={room.childAges.length >= maxChildren}
+                      onClick={() => {
+                        updateRoom(room.key, { childAges: [...room.childAges, DEFAULT_CHILD_AGE] });
+                        resetQuote();
+                      }}
+                    >
+                      <Plus className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {room.childAges.length > 0 && (
+                <div className="mt-2 flex flex-col gap-2">
+                  {room.childAges.map((age, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Label htmlFor={`child-${room.key}-${index}`} className="text-xs text-muted-foreground">
+                        Child {index + 1} age
+                      </Label>
+                      <Input
+                        id={`child-${room.key}-${index}`}
+                        type="number"
+                        min={0}
+                        max={17}
+                        value={age}
+                        onChange={(e) => {
+                          const next = [...room.childAges];
+                          next[index] = Number(e.target.value);
+                          updateRoom(room.key, { childAges: next });
+                          resetQuote();
+                        }}
+                        className="w-16"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          updateRoom(room.key, { childAges: room.childAges.filter((_, i) => i !== index) });
+                          resetQuote();
+                        }}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {room.pricingModel === "per_person_per_night" && (
+                <p className="mt-1 text-xs text-muted-foreground">This room&apos;s pricing requires at least 2 guests.</p>
+              )}
+              {roomQuote?.occupancyError && (
+                <p className="mt-1 text-xs text-destructive">{roomQuote.occupancyError}</p>
+              )}
+              {roomQuote && !roomQuote.occupancyError && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  ₹{roomQuote.roomTotal.toLocaleString("en-IN")} for this room
+                </p>
+              )}
+            </div>
+          );
+        })}
 
         {quoteError && (
           <Alert variant="destructive">
@@ -318,7 +391,7 @@ export function BookingWidget({ rooms }: { rooms: RoomTypeCardData[] }) {
         )}
 
         {!quote && (
-          <Button onClick={handleCheckAvailability} disabled={quoteLoading} className="w-full">
+          <Button onClick={handleCheckAvailability} disabled={quoteLoading || rooms.length === 0} className="w-full">
             {quoteLoading ? "Checking…" : "Check availability"}
           </Button>
         )}
@@ -326,23 +399,15 @@ export function BookingWidget({ rooms }: { rooms: RoomTypeCardData[] }) {
         {quote && !quote.isAvailable && (
           <Alert variant="destructive">
             <AlertDescription>
-              {quote.guestsExceedOccupancy
-                ? "Guests exceed this room's occupancy."
-                : "Not available for all selected dates. Try different dates."}
+              {quote.hasOccupancyErrors
+                ? "Fix the room occupancy issues above."
+                : "Not available for all selected dates/rooms. Try different dates or fewer rooms."}
             </AlertDescription>
           </Alert>
         )}
 
         {quote && quote.isAvailable && (
           <div className="flex flex-col gap-3 rounded-md border border-border bg-muted/40 p-3">
-            <div className="flex flex-col gap-1 text-sm text-foreground/80">
-              {quote.nightlyBreakdown.map((n) => (
-                <div key={n.date} className="flex justify-between">
-                  <span>{n.date}</span>
-                  <span>₹{n.rate.toLocaleString("en-IN")}</span>
-                </div>
-              ))}
-            </div>
             <div className="flex justify-between border-t border-border pt-2 text-base font-semibold text-foreground">
               <span>Total ({quote.nights} night{quote.nights > 1 ? "s" : ""})</span>
               <span>₹{quote.totalAmount.toLocaleString("en-IN")}</span>
@@ -358,7 +423,7 @@ export function BookingWidget({ rooms }: { rooms: RoomTypeCardData[] }) {
               {bookingLoading ? "Processing…" : "Book & Pay"}
             </Button>
             <Button variant="ghost" size="sm" onClick={resetQuote} disabled={bookingLoading}>
-              Change dates
+              Change rooms or dates
             </Button>
           </div>
         )}

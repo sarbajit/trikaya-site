@@ -4,6 +4,7 @@ import { MapPin } from "lucide-react";
 import { connectDB } from "@/lib/db";
 import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
+import { BookingCartProvider } from "../../_components/BookingCartContext";
 import { PropertyGallery } from "../../_components/PropertyGallery";
 import { StarRating } from "../../_components/StarRating";
 import { AmenityIcon } from "../../_components/AmenityIcon";
@@ -77,6 +78,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         <PropertyGallery slug={property.slug} name={property.name} />
       </div>
 
+      <BookingCartProvider>
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_20rem]">
         <div className="flex flex-col gap-10">
           <section>
@@ -152,6 +154,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           />
         </Suspense>
       </div>
+      </BookingCartProvider>
     </div>
   );
 }
