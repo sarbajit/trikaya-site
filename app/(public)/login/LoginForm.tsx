@@ -41,6 +41,8 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
           setShowResend(true);
         } else if (result.code === "agent-suspended") {
           setErrorMessage("This account has been suspended. Contact us for details.");
+        } else if (result.code === "login-disabled") {
+          setErrorMessage("This account's login has been disabled. Contact us for details.");
         } else {
           setErrorMessage("Invalid email or password.");
         }

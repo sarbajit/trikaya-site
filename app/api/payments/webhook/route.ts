@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import type { ClientSession } from "mongoose";
 import { connectDB } from "@/lib/db";
-import { enumerateNights, formatISODate } from "@/lib/date-helpers";
+import { formatISODate } from "@/lib/date-helpers";
+import { reserveInventoryForBooking } from "@/lib/booking-inventory";
 import { sendBookingConfirmationEmail } from "@/lib/email";
 import { verifyWebhookSignature } from "@/lib/razorpay";
 import { createSwipeInvoice, getSwipeInvoicePdf } from "@/lib/swipe";
 import { Agent } from "@/models/Agent";
-import { Availability } from "@/models/Availability";
 import { Booking, type IBooking } from "@/models/Booking";
 import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
@@ -69,47 +68,6 @@ async function generateAndSendInvoice(booking: IBooking): Promise<void> {
   });
 }
 
-/**
- * Reserves `count` units of inventory per night inside a transaction. Throws
- * if any night can't cover the requested count, so the caller can abort the
- * whole booking rather than leaving a partial reservation. New Availability
- * docs default their totalUnits to the room type's totalInventory (same
- * convention as lib/pricing.ts's resolveAvailableUnits) the first time a
- * date is touched.
- */
-async function reserveRoomTypeNights(
-  roomTypeId: string,
-  nights: Date[],
-  count: number,
-  totalInventory: number,
-  dbSession: ClientSession
-) {
-  for (const date of nights) {
-    const updated = await Availability.findOneAndUpdate(
-      {
-        roomTypeId,
-        date,
-        $expr: { $lte: [{ $add: ["$booked", "$blocked", count] }, "$totalUnits"] },
-      },
-      { $inc: { booked: count } },
-      { session: dbSession, new: true }
-    );
-    if (updated) continue;
-
-    const existing = await Availability.findOne({ roomTypeId, date }, null, { session: dbSession });
-    if (existing) {
-      throw new Error("SOLD_OUT");
-    }
-    if (totalInventory < count) {
-      throw new Error("SOLD_OUT");
-    }
-    await Availability.create(
-      [{ roomTypeId, date, totalUnits: totalInventory, booked: count, blocked: 0 }],
-      { session: dbSession }
-    );
-  }
-}
-
 export async function POST(request: Request) {
   const rawBody = await request.text();
   const signatureHeader = request.headers.get("x-razorpay-signature");
@@ -141,19 +99,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
 
-  const countByRoomType = new Map<string, number>();
-  for (const room of booking.rooms) {
-    const key = String(room.roomTypeId);
-    countByRoomType.set(key, (countByRoomType.get(key) ?? 0) + 1);
-  }
-
-  const roomTypes = await RoomType.find({ _id: { $in: [...countByRoomType.keys()] } });
-  if (roomTypes.length !== countByRoomType.size) {
+  const roomTypeIds = [...new Set(booking.rooms.map((room) => String(room.roomTypeId)))];
+  const roomTypeCount = await RoomType.countDocuments({ _id: { $in: roomTypeIds } });
+  if (roomTypeCount !== roomTypeIds.length) {
     return NextResponse.json({ received: true });
   }
-  const totalInventoryByRoomType = new Map(roomTypes.map((rt) => [String(rt._id), rt.totalInventory]));
-
-  const nights = enumerateNights(booking.checkIn, booking.checkOut);
 
   const conn = await connectDB();
   const dbSession = await conn.startSession();
@@ -161,15 +111,7 @@ export async function POST(request: Request) {
   let soldOut = false;
   try {
     await dbSession.withTransaction(async () => {
-      for (const [roomTypeId, count] of countByRoomType) {
-        await reserveRoomTypeNights(
-          roomTypeId,
-          nights,
-          count,
-          totalInventoryByRoomType.get(roomTypeId)!,
-          dbSession
-        );
-      }
+      await reserveInventoryForBooking(booking, dbSession);
     });
   } catch (error) {
     if (error instanceof Error && error.message === "SOLD_OUT") {

@@ -20,6 +20,7 @@ export default async function AdminSettingsPage() {
     socialLinks: settings.socialLinks.map((link) => ({ platform: link.platform, url: link.url })),
     contactRecipientEmail: settings.contactRecipientEmail,
     b2bEnabled: settings.b2bEnabled,
+    bookingEnabled: settings.bookingEnabled,
     invoicePrefix: settings.invoicePrefix,
     taxSettings: settings.taxSettings ? { gstin: settings.taxSettings.gstin ?? "" } : undefined,
     childMaxAge: settings.childMaxAge,

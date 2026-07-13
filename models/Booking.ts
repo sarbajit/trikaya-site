@@ -1,9 +1,9 @@
 import { Schema, model, models, type Document, type Model, type Types } from "mongoose";
 import type { PricingModel } from "./RoomType";
 
-export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
-export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
-export type BookingSource = "website" | "ota";
+export type PaymentStatus = "pending" | "paid" | "failed" | "refunded" | "awaiting_offline";
+export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed" | "requested";
+export type BookingSource = "website" | "ota" | "manual";
 
 export interface IRazorpayDetails {
   orderId?: string;
@@ -53,6 +53,8 @@ export interface IBooking extends Document {
   swipeInvoiceId?: string;
   status: BookingStatus;
   source: BookingSource;
+  createdBy?: Types.ObjectId;
+  guestNote?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -107,7 +109,7 @@ const BookingSchema = new Schema<IBooking>(
     currency: { type: String, required: true, default: "INR" },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed", "refunded"],
+      enum: ["pending", "paid", "failed", "refunded", "awaiting_offline"],
       required: true,
       default: "pending",
     },
@@ -116,12 +118,14 @@ const BookingSchema = new Schema<IBooking>(
     swipeInvoiceId: { type: String },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "cancelled", "completed"],
+      enum: ["pending", "confirmed", "cancelled", "completed", "requested"],
       required: true,
       default: "pending",
       index: true,
     },
-    source: { type: String, enum: ["website", "ota"], required: true, default: "website" },
+    source: { type: String, enum: ["website", "ota", "manual"], required: true, default: "website" },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    guestNote: { type: String, trim: true },
   },
   { timestamps: true }
 );

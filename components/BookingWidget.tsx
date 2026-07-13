@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useBookingCart } from "@/app/(public)/_components/BookingCartContext";
 import { type RoomTypeCardData } from "@/app/(public)/_components/RoomTypeCard";
 
@@ -68,7 +69,13 @@ function loadRazorpayScript(): Promise<void> {
   });
 }
 
-export function BookingWidget({ rooms: catalog }: { rooms: RoomTypeCardData[] }) {
+export function BookingWidget({
+  rooms: catalog,
+  bookingEnabled,
+}: {
+  rooms: RoomTypeCardData[];
+  bookingEnabled: boolean;
+}) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -83,6 +90,8 @@ export function BookingWidget({ rooms: catalog }: { rooms: RoomTypeCardData[] })
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [guestNote, setGuestNote] = useState("");
+  const [requestSent, setRequestSent] = useState(false);
 
   function resetQuote() {
     setQuote(null);
@@ -191,6 +200,34 @@ export function BookingWidget({ rooms: catalog }: { rooms: RoomTypeCardData[] })
       rzp.open();
     } catch {
       setBookingError("Something went wrong starting the payment. Please try again.");
+      setBookingLoading(false);
+    }
+  }
+
+  async function handleRequestToBook() {
+    if (!quote || !quote.isAvailable) return;
+    setBookingLoading(true);
+    setBookingError(null);
+    try {
+      const response = await fetch("/api/bookings/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          checkIn,
+          checkOut,
+          rooms: rooms.map((r) => ({ roomTypeId: r.roomTypeId, adults: r.adults, childAges: r.childAges })),
+          guestNote: guestNote.trim() || undefined,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setBookingError(typeof data.error === "string" ? data.error : "Could not send the request.");
+        return;
+      }
+      setRequestSent(true);
+    } catch {
+      setBookingError("Something went wrong sending the request. Please try again.");
+    } finally {
       setBookingLoading(false);
     }
   }
@@ -406,7 +443,15 @@ export function BookingWidget({ rooms: catalog }: { rooms: RoomTypeCardData[] })
           </Alert>
         )}
 
-        {quote && quote.isAvailable && (
+        {quote && quote.isAvailable && requestSent && (
+          <Alert variant="success">
+            <AlertDescription>
+              Request sent — we&apos;ll confirm by email shortly once availability is verified.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {quote && quote.isAvailable && !requestSent && (
           <div className="flex flex-col gap-3 rounded-md border border-border bg-muted/40 p-3">
             <div className="flex justify-between border-t border-border pt-2 text-base font-semibold text-foreground">
               <span>Total ({quote.nights} night{quote.nights > 1 ? "s" : ""})</span>
@@ -419,9 +464,27 @@ export function BookingWidget({ rooms: catalog }: { rooms: RoomTypeCardData[] })
               </Alert>
             )}
 
-            <Button onClick={handleBookAndPay} disabled={bookingLoading} className="w-full">
-              {bookingLoading ? "Processing…" : "Book & Pay"}
-            </Button>
+            {bookingEnabled ? (
+              <Button onClick={handleBookAndPay} disabled={bookingLoading} className="w-full">
+                {bookingLoading ? "Processing…" : "Book & Pay"}
+              </Button>
+            ) : (
+              <>
+                <div>
+                  <Label htmlFor="guestNote">Note for the property (optional)</Label>
+                  <Textarea
+                    id="guestNote"
+                    value={guestNote}
+                    onChange={(e) => setGuestNote(e.target.value)}
+                    className="mt-1"
+                    rows={3}
+                  />
+                </div>
+                <Button onClick={handleRequestToBook} disabled={bookingLoading} className="w-full">
+                  {bookingLoading ? "Sending…" : "Request to Book"}
+                </Button>
+              </>
+            )}
             <Button variant="ghost" size="sm" onClick={resetQuote} disabled={bookingLoading}>
               Change rooms or dates
             </Button>

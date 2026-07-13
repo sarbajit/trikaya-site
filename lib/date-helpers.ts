@@ -119,3 +119,30 @@ export function buildMonthGrid(
   }
   return weeks;
 }
+
+/** The 7-day range [start, end) containing dateIso, starting on weekStartsOn. */
+export function getWeekBounds(dateIso: string, weekStartsOn: 0 | 1 = 0): { start: Date; end: Date } {
+  const date = toDateOnlyUTC(dateIso);
+  const dow = date.getUTCDay();
+  const diff = (dow - weekStartsOn + 7) % 7;
+  const start = addDays(date, -diff);
+  const end = addDays(start, 7);
+  return { start, end };
+}
+
+/** A single row of 7 calendar cells for the week containing dateIso. */
+export function buildWeekRow(dateIso: string, weekStartsOn: 0 | 1 = 0): MonthGridCell[] {
+  const { start } = getWeekBounds(dateIso, weekStartsOn);
+  const todayISO = formatISODate(toDateOnlyUTC(new Date()));
+  const cells: MonthGridCell[] = [];
+  for (let i = 0; i < 7; i++) {
+    const date = addDays(start, i);
+    const iso = formatISODate(date);
+    cells.push({ date, iso, inMonth: true, isToday: iso === todayISO });
+  }
+  return cells;
+}
+
+export function getYearBounds(year: number): { start: Date; end: Date } {
+  return { start: new Date(Date.UTC(year, 0, 1)), end: new Date(Date.UTC(year + 1, 0, 1)) };
+}

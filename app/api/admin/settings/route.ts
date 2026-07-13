@@ -27,6 +27,7 @@ export async function PUT(request: Request) {
 
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/properties/[slug]", "page");
 
   return NextResponse.json(updated);
 }

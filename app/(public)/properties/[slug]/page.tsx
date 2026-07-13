@@ -4,6 +4,7 @@ import { MapPin } from "lucide-react";
 import { connectDB } from "@/lib/db";
 import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
+import { getSiteSettings } from "@/models/SiteSettings";
 import { BookingCartProvider } from "../../_components/BookingCartContext";
 import { PropertyGallery } from "../../_components/PropertyGallery";
 import { StarRating } from "../../_components/StarRating";
@@ -55,6 +56,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   const data = await getProperty(slug);
   if (!data) notFound();
   const { property, rooms } = data;
+  const settings = await getSiteSettings();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -151,6 +153,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
               pricingModel: room.pricingModel,
               basePriceB2C: room.basePriceB2C,
             }))}
+            bookingEnabled={settings.bookingEnabled}
           />
         </Suspense>
       </div>

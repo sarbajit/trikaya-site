@@ -26,6 +26,7 @@ export const siteSettingsUpdateSchema = z.object({
   socialLinks: z.array(socialLinkSchema).default([]),
   contactRecipientEmail: z.string().trim().email("Must be a valid email"),
   b2bEnabled: z.boolean(),
+  bookingEnabled: z.boolean(),
   invoicePrefix: z.string().trim().min(1, "Invoice prefix is required"),
   taxSettings: taxSettingsSchema.optional(),
   childMaxAge: z.number().int().min(0, "Must be 0 or greater"),

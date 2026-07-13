@@ -4,6 +4,7 @@ import { passwordResetTemplate } from "@/emails/passwordReset";
 import { agentRegisteredTemplate } from "@/emails/agentRegistered";
 import { agentStatusChangedTemplate } from "@/emails/agentStatusChanged";
 import { bookingConfirmedTemplate } from "@/emails/bookingConfirmed";
+import { bookingRequestedTemplate } from "@/emails/bookingRequested";
 import { contactMessageTemplate } from "@/emails/contactMessage";
 import { dataDeletionRequestedTemplate } from "@/emails/dataDeletionRequested";
 import type { AgentStatus } from "@/models/Agent";
@@ -88,6 +89,34 @@ export async function sendBookingConfirmationEmail(params: {
       ? [{ filename: `${params.invoiceNumber}.pdf`, content: params.invoicePdf }]
       : undefined;
   await send(params.to, subject, html, attachments);
+}
+
+export async function sendBookingRequestedEmail(params: {
+  to: string;
+  guestName: string;
+  guestEmail: string;
+  propertyName: string;
+  checkIn: string;
+  checkOut: string;
+  rooms: { roomTypeName: string; adults: number; childAges: number[] }[];
+  totalAmount: number;
+  currency: string;
+  guestNote?: string;
+  adminUrl: string;
+}): Promise<void> {
+  const { subject, html } = bookingRequestedTemplate({
+    guestName: params.guestName,
+    guestEmail: params.guestEmail,
+    propertyName: params.propertyName,
+    checkIn: params.checkIn,
+    checkOut: params.checkOut,
+    rooms: params.rooms,
+    totalAmount: params.totalAmount,
+    currency: params.currency,
+    guestNote: params.guestNote,
+    adminUrl: params.adminUrl,
+  });
+  await send(params.to, subject, html);
 }
 
 export async function sendContactMessageEmail(params: {

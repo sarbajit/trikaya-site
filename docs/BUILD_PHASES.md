@@ -187,6 +187,5 @@ Plan mode. Read spec sections 5.12 and 7. Add Hotel/LodgingBusiness JSON-LD
 schema per property, sitemap.xml, robots.txt, editable meta tags. Add custom
 404/500 pages and empty states across the app. Run a security pass: rate
 limiting on auth/booking/contact endpoints, secure headers, confirm no secrets
-are exposed client-side. Then walk me through deployment to Vercel including
-required environment variables.
+are exposed client-side.
 ```

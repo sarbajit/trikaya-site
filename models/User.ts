@@ -20,6 +20,7 @@ export interface IUser extends Document {
   role: UserRole;
   emailVerified?: Date | null;
   gdprConsent?: IGdprConsent;
+  loginEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +43,7 @@ const UserSchema = new Schema<IUser>(
     role: { type: String, enum: ["customer", "agent", "admin"], required: true, default: "customer" },
     emailVerified: { type: Date, default: null },
     gdprConsent: { type: GdprConsentSchema },
+    loginEnabled: { type: Boolean, required: true, default: true },
   },
   { timestamps: true }
 );

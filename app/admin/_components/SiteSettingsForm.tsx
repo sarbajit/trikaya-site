@@ -31,6 +31,7 @@ interface SiteSettingsData {
   socialLinks: SocialLink[];
   contactRecipientEmail: string;
   b2bEnabled: boolean;
+  bookingEnabled: boolean;
   invoicePrefix: string;
   taxSettings?: { gstin?: string };
   childMaxAge: number;
@@ -220,6 +221,26 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
               required
             />
           </FormField>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Bookings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="bookingEnabled"
+              checked={form.bookingEnabled}
+              onCheckedChange={(checked) => update("bookingEnabled", checked)}
+            />
+            <Label htmlFor="bookingEnabled">Enable direct booking &amp; payment</Label>
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            When disabled, guests see a &quot;Request to Book&quot; form instead of instant payment — bookings must
+            be confirmed manually by an admin.
+          </p>
         </CardContent>
       </Card>
 

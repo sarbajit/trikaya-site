@@ -23,6 +23,7 @@ export interface ISiteSettings extends Document {
   socialLinks: ISocialLink[];
   contactRecipientEmail: string;
   b2bEnabled: boolean;
+  bookingEnabled: boolean;
   invoicePrefix: string;
   taxSettings?: ITaxSettings;
   childMaxAge: number;
@@ -48,6 +49,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     },
     contactRecipientEmail: { type: String, required: true },
     b2bEnabled: { type: Boolean, required: true, default: false },
+    bookingEnabled: { type: Boolean, required: true, default: true },
     invoicePrefix: { type: String, required: true, default: "INV-" },
     taxSettings: {
       type: new Schema<ITaxSettings>({ gstin: String }, { _id: false }),
@@ -70,6 +72,7 @@ export async function getSiteSettings(): Promise<ISiteSettings> {
     showCompanyName: true,
     contactRecipientEmail: "",
     b2bEnabled: false,
+    bookingEnabled: true,
     invoicePrefix: "INV-",
   });
 }

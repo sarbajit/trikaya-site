@@ -9,6 +9,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   FileText,
+  IdCard,
   LayoutDashboard,
   MessageSquare,
   Settings,
@@ -28,7 +29,8 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, disabled: true },
   { href: "/admin/properties", label: "Properties", icon: Building2 },
-  { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck, disabled: true },
+  { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
+  { href: "/admin/customers", label: "Customers", icon: IdCard },
   { href: "/admin/agents", label: "Agents", icon: Users },
   { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/content", label: "Content", icon: FileText },

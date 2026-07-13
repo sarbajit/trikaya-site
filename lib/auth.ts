@@ -16,6 +16,10 @@ class AgentSuspendedError extends CredentialsSignin {
   code = "agent-suspended";
 }
 
+class LoginDisabledError extends CredentialsSignin {
+  code = "login-disabled";
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
@@ -37,6 +41,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           if (!user.emailVerified) {
             throw new EmailNotVerifiedError();
+          }
+
+          if (!user.loginEnabled) {
+            throw new LoginDisabledError();
           }
 
           return {
@@ -94,6 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // login, so their security model doesn't change now that Basic Auth
         // is retired.
         if (existing.role !== "customer") return false;
+        if (!existing.loginEnabled) return false;
 
         if (!existing.emailVerified) {
           existing.emailVerified = new Date();
