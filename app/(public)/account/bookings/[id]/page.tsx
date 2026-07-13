@@ -1,23 +1,17 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { canAccessBooking } from "@/lib/booking-authorization";
 import { connectDB } from "@/lib/db";
 import { formatISODate } from "@/lib/date-helpers";
-import { Booking, type BookingStatus } from "@/models/Booking";
+import { Booking } from "@/models/Booking";
 import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const STATUS_BADGE: Record<BookingStatus, { variant: "success" | "default" | "destructive" | "muted"; label: string }> = {
-  pending: { variant: "default", label: "Pending" },
-  confirmed: { variant: "success", label: "Confirmed" },
-  cancelled: { variant: "destructive", label: "Cancelled" },
-  completed: { variant: "muted", label: "Completed" },
-};
 
 export default async function AccountBookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -44,18 +38,19 @@ export default async function AccountBookingDetailPage({ params }: { params: Pro
   ]);
   const roomTypeNameById = new Map(roomTypes.map((rt) => [String(rt._id), rt.name]));
 
-  const statusBadge = STATUS_BADGE[booking.status];
   const canDownloadInvoice = booking.status === "confirmed" && Boolean(booking.swipeInvoiceId);
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-10">
-      <h1 className="font-display text-2xl font-semibold text-foreground">Booking details</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Reference {booking._id.toString()}</p>
+    <div>
+      <Link href="/account/bookings" className="text-sm text-muted-foreground hover:text-foreground">
+        &larr; Back to bookings
+      </Link>
+      <p className="mt-3 text-sm text-muted-foreground">Reference {booking._id.toString()}</p>
 
-      <Card className="mt-6">
+      <Card className="mt-2">
         <CardHeader className="flex flex-row items-center justify-between gap-4">
           <CardTitle>{property?.name ?? "Property"}</CardTitle>
-          <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+          <StatusBadge status={booking.status} />
         </CardHeader>
         <CardContent>
           <dl className="flex flex-col gap-2 text-sm">
@@ -153,6 +148,6 @@ export default async function AccountBookingDetailPage({ params }: { params: Pro
           )}
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }

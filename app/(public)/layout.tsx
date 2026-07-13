@@ -15,6 +15,7 @@ export default async function PublicLayout({ children }: { children: React.React
         showCompanyName={settings.showCompanyName}
         logoUrl={settings.logoUrl}
         isLoggedIn={Boolean(session?.user)}
+        role={session?.user?.role}
       />
       <main className="flex-1">{children}</main>
       <SiteFooter

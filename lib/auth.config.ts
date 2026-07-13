@@ -31,19 +31,31 @@ export const authConfig: NextAuthConfig = {
       return session;
     },
     authorized({ auth, request }) {
+      const { pathname } = request.nextUrl;
       const isAdmin = auth?.user?.role === "admin";
       if (isAdmin) return true;
 
-      if (request.nextUrl.pathname.startsWith("/api/admin")) {
+      if (pathname.startsWith("/api/admin")) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      if (request.nextUrl.pathname.startsWith("/agent/dashboard")) {
+      if (pathname.startsWith("/agent/dashboard")) {
         if (auth?.user?.role === "agent") return true;
 
         const agentLoginUrl = new URL("/agent/login", request.url);
         agentLoginUrl.searchParams.set("callbackUrl", request.url);
         return NextResponse.redirect(agentLoginUrl);
+      }
+
+      // Any authenticated user (customer/agent/admin) may proceed — the
+      // /account layout itself redirects non-customer roles onward, so this
+      // gate only needs to require a session, not a specific role.
+      if (pathname.startsWith("/account")) {
+        if (auth?.user) return true;
+
+        const signInUrl = new URL("/login", request.url);
+        signInUrl.searchParams.set("callbackUrl", request.url);
+        return NextResponse.redirect(signInUrl);
       }
 
       const signInUrl = new URL("/login", request.url);

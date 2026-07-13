@@ -39,7 +39,13 @@ export async function createOrder(input: CreateOrderInput) {
  */
 export function verifyWebhookSignature(rawBody: string, signatureHeader: string | null): boolean {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-  if (!secret || !signatureHeader) return false;
+  if (!secret) {
+    console.error(
+      "RAZORPAY_WEBHOOK_SECRET is not set — every Razorpay webhook will be rejected and bookings will stay 'pending' after payment. Set it to the signing secret configured for this webhook in the Razorpay Dashboard."
+    );
+    return false;
+  }
+  if (!signatureHeader) return false;
 
   const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
 

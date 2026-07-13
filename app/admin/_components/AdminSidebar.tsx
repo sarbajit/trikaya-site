@@ -28,7 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/properties", label: "Properties", icon: Building2 },
   { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck, disabled: true },
   { href: "/admin/agents", label: "Agents", icon: Users },
-  { href: "/admin/reviews", label: "Reviews", icon: Star, disabled: true },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/content", label: "Content", icon: FileText, disabled: true },
   { href: "/admin", label: "Settings", icon: Settings },
 ];

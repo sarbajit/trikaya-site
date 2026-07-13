@@ -8,7 +8,8 @@ export type AdminStatus =
   | "active"
   | "inactive"
   | "confirmed"
-  | "cancelled";
+  | "cancelled"
+  | "completed";
 
 const STATUS_CONFIG: Record<AdminStatus, { label: string; variant: BadgeProps["variant"] }> = {
   pending: { label: "Pending", variant: "muted" },
@@ -19,6 +20,7 @@ const STATUS_CONFIG: Record<AdminStatus, { label: string; variant: BadgeProps["v
   inactive: { label: "Inactive", variant: "muted" },
   confirmed: { label: "Confirmed", variant: "success" },
   cancelled: { label: "Cancelled", variant: "destructive" },
+  completed: { label: "Completed", variant: "muted" },
 };
 
 export function StatusBadge({ status, className }: { status: AdminStatus; className?: string }) {
