@@ -11,6 +11,7 @@ export default async function AdminSettingsPage() {
     companyName: settings.companyName,
     showCompanyName: settings.showCompanyName,
     logoUrl: settings.logoUrl ?? "",
+    heroImageUrl: settings.heroImageUrl ?? "",
     primaryColor: settings.primaryColor ?? "",
     secondaryColor: settings.secondaryColor ?? "",
     accentColor: settings.accentColor ?? "",

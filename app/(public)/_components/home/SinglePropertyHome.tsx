@@ -4,6 +4,8 @@ import { RICH_TEXT_CLASS } from "@/lib/rich-text-classes";
 import { cn } from "@/lib/utils";
 import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
+import { getSiteSettings } from "@/models/SiteSettings";
+import { HERO_TEXT_STYLE } from "../hero-text-style";
 import { PropertyPhoto } from "../PropertyPhoto";
 import { PropertyGallery } from "../PropertyGallery";
 import { StarRating } from "../StarRating";
@@ -20,21 +22,30 @@ export async function SinglePropertyHome() {
   const property = await Property.findOne({ isActive: true }).lean();
   if (!property) return null;
 
-  const rooms = await RoomType.find({ propertyId: property._id }).lean();
+  const [rooms, settings] = await Promise.all([
+    RoomType.find({ propertyId: property._id }).lean(),
+    getSiteSettings(),
+  ]);
+  const heroImage = settings.heroImageUrl
+    ? { url: settings.heroImageUrl, alt: property.name }
+    : (property.images?.[0] ?? null);
 
   return (
     <div>
       <section className="relative overflow-hidden">
         <PropertyPhoto
-          image={property.images?.[0] ?? null}
+          image={heroImage}
           seedKey={property.slug}
           alt={property.name}
           className="h-[70vh] min-h-[420px] w-full"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
         <div className="absolute inset-0 flex items-end">
-          <div className="animate-fade-up mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6">
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          <div
+            className="animate-fade-up mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6"
+            style={HERO_TEXT_STYLE}
+          >
+            <span className="rounded-sm bg-white/90 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               {property.destination}
             </span>
             <h1 className="mt-2 font-display text-4xl text-foreground sm:text-5xl">{property.name}</h1>

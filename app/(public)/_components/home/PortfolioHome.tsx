@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { searchProperties, groupByDestination } from "@/lib/property-search";
 import { getSiteSettings } from "@/models/SiteSettings";
-import { PropertyImage } from "../PropertyImage";
+import { PropertyPhoto } from "../PropertyPhoto";
+import { HERO_TEXT_STYLE } from "../hero-text-style";
 import { PropertyCard } from "../PropertyCard";
 import { SectionDivider } from "../SectionDivider";
 import { Button } from "@/components/ui/button";
@@ -18,11 +19,19 @@ export async function PortfolioHome() {
   return (
     <div>
       <section className="relative overflow-hidden">
-        <PropertyImage seedKey={`${settings.companyName}-portfolio-hero`} alt="" className="h-[52vh] min-h-[340px] w-full" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+        <PropertyPhoto
+          image={settings.heroImageUrl ? { url: settings.heroImageUrl, alt: "" } : null}
+          seedKey={`${settings.companyName}-portfolio-hero`}
+          alt=""
+          className="h-[52vh] min-h-[340px] w-full"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
         <div className="absolute inset-0 flex items-end">
-          <div className="animate-fade-up mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6">
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          <div
+            className="animate-fade-up mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6"
+            style={HERO_TEXT_STYLE}
+          >
+            <span className="rounded-sm bg-white/90 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               {destinations.length} destinations
             </span>
             <h1 className="mt-2 max-w-2xl font-display text-4xl text-foreground sm:text-5xl">

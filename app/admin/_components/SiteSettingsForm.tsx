@@ -22,6 +22,7 @@ interface SiteSettingsData {
   companyName: string;
   showCompanyName: boolean;
   logoUrl?: string;
+  heroImageUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;
@@ -126,6 +127,24 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
             value={form.logoUrl}
             onChange={(url) => update("logoUrl", url)}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Homepage</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CloudinaryUploader
+            folder="branding"
+            label="Homepage hero image"
+            value={form.heroImageUrl}
+            onChange={(url) => update("heroImageUrl", url)}
+          />
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Shown at the top of the homepage. Not tied to any property&apos;s gallery — leave empty to fall back to
+            the default imagery.
+          </p>
         </CardContent>
       </Card>
 

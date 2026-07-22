@@ -17,6 +17,7 @@ export const siteSettingsUpdateSchema = z.object({
   companyName: z.string().trim().min(1, "Company name is required"),
   showCompanyName: z.boolean(),
   logoUrl: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
+  heroImageUrl: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   primaryColor: hexColorSchema.optional(),
   secondaryColor: hexColorSchema.optional(),
   accentColor: hexColorSchema.optional(),
