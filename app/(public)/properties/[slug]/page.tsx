@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { MapPin } from "lucide-react";
 import { connectDB } from "@/lib/db";
+import { RICH_TEXT_CLASS } from "@/lib/rich-text-classes";
+import { stripHtml } from "@/lib/strip-html";
+import { cn } from "@/lib/utils";
 import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
 import { getSiteSettings } from "@/models/SiteSettings";
@@ -47,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!data) return { title: "Property not found | Trikaya" };
   return {
     title: `${data.property.name} — ${data.property.destination} | Trikaya`,
-    description: data.property.description,
+    description: stripHtml(data.property.description, 160),
   };
 }
 
@@ -85,7 +88,10 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         <div className="flex flex-col gap-10">
           <section>
             <h2 className="font-display text-2xl text-foreground">About this stay</h2>
-            <p className="mt-3 max-w-2xl text-foreground/80">{property.description}</p>
+            <div
+              className={cn(RICH_TEXT_CLASS, "mt-3 max-w-2xl")}
+              dangerouslySetInnerHTML={{ __html: property.description }}
+            />
             <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3">
               {property.amenities.map((amenity) => (
                 <span key={amenity} className="flex items-center gap-2 text-sm text-foreground/80">

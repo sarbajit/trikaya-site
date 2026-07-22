@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { DynamicListField } from "@/app/admin/_components/DynamicListField";
 import { ImageGalleryUploader, type GalleryImage } from "@/components/ImageGalleryUploader";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/ui/form-field";
@@ -232,8 +233,8 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
           <CardTitle>Description &amp; amenities</CardTitle>
         </CardHeader>
         <CardContent>
-          <FormField label="Description" htmlFor="description" error={errors?.description} required>
-            <Textarea id="description" value={form.description} onChange={(e) => update("description", e.target.value)} required />
+          <FormField label="Description" error={errors?.description} required>
+            <RichTextEditor value={form.description} onChange={(html) => update("description", html)} />
           </FormField>
           <DynamicListField label="Amenities" items={form.amenities} onChange={(items) => update("amenities", items)} />
         </CardContent>
@@ -269,11 +270,11 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
               <Input id="checkOut" value={form.checkOut} onChange={(e) => update("checkOut", e.target.value)} placeholder="e.g. 11:00 AM" className="w-40" />
             </FormField>
           </div>
-          <FormField label="House rules" htmlFor="houseRules">
-            <Textarea id="houseRules" value={form.houseRules} onChange={(e) => update("houseRules", e.target.value)} />
+          <FormField label="House rules">
+            <RichTextEditor value={form.houseRules} onChange={(html) => update("houseRules", html)} />
           </FormField>
-          <FormField label="Cancellation policy" htmlFor="cancellationPolicy">
-            <Textarea id="cancellationPolicy" value={form.cancellationPolicy} onChange={(e) => update("cancellationPolicy", e.target.value)} />
+          <FormField label="Cancellation policy">
+            <RichTextEditor value={form.cancellationPolicy} onChange={(html) => update("cancellationPolicy", html)} />
           </FormField>
         </CardContent>
       </Card>

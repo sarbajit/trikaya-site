@@ -1,4 +1,6 @@
 import { Clock, ScrollText, ShieldCheck } from "lucide-react";
+import { RICH_TEXT_CLASS } from "@/lib/rich-text-classes";
+import { cn } from "@/lib/utils";
 
 interface Policies {
   checkIn?: string;
@@ -37,7 +39,10 @@ export function PoliciesSection({ policies }: { policies?: Policies }) {
         <div key={item.title} className="rounded-md border border-border bg-card p-4">
           <item.icon className="size-4 text-primary" aria-hidden />
           <p className="mt-2 text-sm font-semibold text-foreground">{item.title}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{item.body}</p>
+          <div
+            className={cn(RICH_TEXT_CLASS, "mt-1 text-sm text-muted-foreground")}
+            dangerouslySetInnerHTML={{ __html: item.body }}
+          />
         </div>
       ))}
     </div>

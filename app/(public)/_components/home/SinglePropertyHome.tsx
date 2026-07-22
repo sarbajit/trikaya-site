@@ -1,5 +1,7 @@
 import { MapPin } from "lucide-react";
 import { connectDB } from "@/lib/db";
+import { RICH_TEXT_CLASS } from "@/lib/rich-text-classes";
+import { cn } from "@/lib/utils";
 import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
 import { PropertyPhoto } from "../PropertyPhoto";
@@ -42,7 +44,10 @@ export async function SinglePropertyHome() {
                 <MapPin className="size-3.5" /> {property.address}
               </span>
             </div>
-            <p className="mt-4 max-w-xl text-foreground/80">{property.description}</p>
+            <div
+              className={cn(RICH_TEXT_CLASS, "mt-4 max-w-xl")}
+              dangerouslySetInnerHTML={{ __html: property.description }}
+            />
             <Button asChild className="mt-6" size="lg">
               <a href="#rooms">Book your stay</a>
             </Button>
