@@ -14,6 +14,7 @@ export interface IRoomType extends Document {
   childPriceB2C: number;
   childPriceB2B: number;
   images: IImage[];
+  amenities: string[];
   totalInventory: number;
   createdAt: Date;
   updatedAt: Date;
@@ -38,6 +39,7 @@ const RoomTypeSchema = new Schema<IRoomType>(
     childPriceB2C: { type: Number, required: true, default: 0, min: 0 },
     childPriceB2B: { type: Number, required: true, default: 0, min: 0 },
     images: { type: [ImageSchema], default: [] },
+    amenities: { type: [String], default: [] },
     totalInventory: { type: Number, required: true, min: 0 },
   },
   { timestamps: true }

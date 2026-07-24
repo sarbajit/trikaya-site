@@ -11,6 +11,7 @@ export const roomTypeSchema = z.object({
   childPriceB2C: z.number().min(0).default(0),
   childPriceB2B: z.number().min(0).default(0),
   images: z.array(imageSchema).default([]),
+  amenities: z.array(z.string().trim().min(1)).default([]),
   totalInventory: z.number().int().min(0),
 });
 

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { propertyId, checkIn, checkOut, rooms, customerMode, userId, newCustomer } = parsed.data;
+  const { propertyId, checkIn, checkOut, rooms, customerMode, userId, newCustomer, source, internalNotes } = parsed.data;
 
   let quote;
   try {
@@ -100,7 +100,8 @@ export async function POST(request: Request) {
     currency: quote.currency,
     paymentStatus: "paid",
     status: "confirmed",
-    source: "manual",
+    source,
+    internalNotes,
     createdBy: session.user.id,
   });
 

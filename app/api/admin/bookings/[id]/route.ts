@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 import { auth } from "@/lib/auth";
 import { reserveInventoryForBooking } from "@/lib/booking-inventory";
 import { connectDB } from "@/lib/db";
-import { adminBookingRequestActionSchema } from "@/lib/validation/booking";
+import { adminBookingEditSchema, adminBookingRequestActionSchema } from "@/lib/validation/booking";
 import { Booking } from "@/models/Booking";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -17,6 +17,34 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params;
   const json = await request.json().catch(() => null);
+
+  // Internal metadata edits (Booking Source / Notes) are not workflow actions —
+  // handle them separately, without the "requested"-only gate below.
+  if (!(json && typeof json === "object" && "action" in json)) {
+    const editParsed = adminBookingEditSchema.safeParse(json);
+    if (!editParsed.success) {
+      return NextResponse.json({ error: editParsed.error.flatten() }, { status: 400 });
+    }
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    if (editParsed.data.source !== undefined) {
+      booking.source = editParsed.data.source;
+    }
+    if (editParsed.data.internalNotes !== undefined) {
+      booking.internalNotes = editParsed.data.internalNotes;
+    }
+    await booking.save();
+
+    revalidatePath("/admin/bookings");
+    revalidatePath(`/admin/bookings/${id}`);
+
+    return NextResponse.json(booking);
+  }
+
   const parsed = adminBookingRequestActionSchema.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

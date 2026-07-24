@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BookingActions } from "../_components/BookingActions";
+import { BookingSourceNotesEditor } from "../_components/BookingSourceNotesEditor";
 
 export default async function AdminBookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -67,10 +68,6 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
                 {formatISODate(booking.checkIn)} &rarr; {formatISODate(booking.checkOut)}
               </dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">Source</dt>
-              <dd className="font-medium capitalize text-foreground">{booking.source}</dd>
-            </div>
             {booking.invoiceNumber && (
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Invoice number</dt>
@@ -85,6 +82,14 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
               <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{booking.guestNote}</p>
             </div>
           )}
+
+          <div className="mt-4">
+            <BookingSourceNotesEditor
+              bookingId={booking._id.toString()}
+              source={booking.source}
+              internalNotes={booking.internalNotes}
+            />
+          </div>
 
           <div className="mt-5 flex flex-col gap-5">
             {booking.rooms.map((room, index) => {

@@ -1,8 +1,11 @@
 import { z } from "zod";
+import { BOOKING_SOURCES } from "@/lib/constants/bookingSource";
 import { isValidISODateString } from "@/lib/date-helpers";
 import { objectIdSchema } from "@/lib/validation/shared";
 
 const isoDateSchema = z.string().refine(isValidISODateString, "Must be a valid date (yyyy-MM-dd)");
+
+const bookingSourceSchema = z.enum(BOOKING_SOURCES);
 
 const roomSelectionSchema = z.object({
   roomTypeId: objectIdSchema,
@@ -34,6 +37,17 @@ export const adminBookingRequestActionSchema = z.object({
 
 export type AdminBookingRequestActionInput = z.infer<typeof adminBookingRequestActionSchema>;
 
+export const adminBookingEditSchema = z
+  .object({
+    source: bookingSourceSchema.optional(),
+    internalNotes: z.string().trim().max(2000, "Notes must be 2000 characters or fewer").optional(),
+  })
+  .refine((data) => data.source !== undefined || data.internalNotes !== undefined, {
+    message: "Nothing to update",
+  });
+
+export type AdminBookingEditInput = z.infer<typeof adminBookingEditSchema>;
+
 const newCustomerSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   email: z.string().trim().email("Must be a valid email"),
@@ -49,6 +63,8 @@ export const adminManualBookingSchema = z
     customerMode: z.enum(["existing", "new"]),
     userId: objectIdSchema.optional(),
     newCustomer: newCustomerSchema.optional(),
+    source: bookingSourceSchema,
+    internalNotes: z.string().trim().max(2000, "Notes must be 2000 characters or fewer").optional(),
   })
   .refine((data) => (data.customerMode === "existing" ? Boolean(data.userId) : Boolean(data.newCustomer)), {
     message: "Provide an existing customer or new customer details",

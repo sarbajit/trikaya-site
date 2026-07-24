@@ -88,7 +88,7 @@ export async function SinglePropertyHome() {
 
       <section id="rooms" className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <h2 className="font-display text-2xl text-foreground">Rooms & rates</h2>
-        <div className="mt-5 flex flex-col gap-4">
+        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => (
             <RoomTypeCard
               key={room._id.toString()}
@@ -100,6 +100,7 @@ export async function SinglePropertyHome() {
                 pricingModel: room.pricingModel,
                 basePriceB2C: room.basePriceB2C,
                 images: room.images,
+                amenities: room.amenities,
               }}
             />
           ))}

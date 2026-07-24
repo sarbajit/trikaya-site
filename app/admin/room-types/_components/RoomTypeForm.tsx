@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { DynamicListField } from "@/app/admin/_components/DynamicListField";
 import { ImageGalleryUploader, type GalleryImage } from "@/components/ImageGalleryUploader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,7 @@ export interface RoomTypeFormData {
   childPriceB2C: string;
   childPriceB2B: string;
   images: GalleryImage[];
+  amenities: string[];
   totalInventory: string;
 }
 
@@ -31,6 +33,7 @@ export const EMPTY_ROOM_TYPE_FORM: RoomTypeFormData = {
   childPriceB2C: "0",
   childPriceB2B: "0",
   images: [],
+  amenities: [],
   totalInventory: "1",
 };
 
@@ -67,6 +70,7 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
       childPriceB2C: Number(form.childPriceB2C),
       childPriceB2B: Number(form.childPriceB2B),
       images: form.images,
+      amenities: form.amenities,
       totalInventory: Number(form.totalInventory),
     };
 
@@ -215,6 +219,23 @@ export function RoomTypeForm({ propertyId, initialData, roomTypeId }: RoomTypeFo
           />
           {errors?.images && errors.images.length > 0 && (
             <p className="mt-2 text-xs text-destructive">{errors.images.join(", ")}</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Amenities</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DynamicListField
+            label="Amenities"
+            items={form.amenities}
+            onChange={(items) => update("amenities", items)}
+            placeholder="e.g. Balcony, Air conditioning"
+          />
+          {errors?.amenities && errors.amenities.length > 0 && (
+            <p className="mt-2 text-xs text-destructive">{errors.amenities.join(", ")}</p>
           )}
         </CardContent>
       </Card>

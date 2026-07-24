@@ -110,6 +110,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 <RoomTypeCard
                   key={room._id.toString()}
                   propertySlug={property.slug}
+                  layout="row"
                   room={{
                     id: room._id.toString(),
                     name: room.name,
@@ -117,6 +118,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                     pricingModel: room.pricingModel,
                     basePriceB2C: room.basePriceB2C,
                     images: room.images,
+                    amenities: room.amenities,
                   }}
                 />
               ))}

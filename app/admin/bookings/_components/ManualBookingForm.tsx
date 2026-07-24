@@ -10,7 +10,9 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { BOOKING_SOURCES, BOOKING_SOURCE_LABELS, type BookingSource } from "@/lib/constants/bookingSource";
 
 interface PropertyOption {
   id: string;
@@ -84,6 +86,8 @@ export function ManualBookingForm({
   const [checkIn, setCheckIn] = useState(initialDate ?? "");
   const [checkOut, setCheckOut] = useState("");
   const [rooms, setRooms] = useState<RoomSelection[]>([]);
+  const [source, setSource] = useState<BookingSource>("direct");
+  const [internalNotes, setInternalNotes] = useState("");
   const [customerMode, setCustomerMode] = useState<"existing" | "new">(customers.length > 0 ? "existing" : "new");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [newCustomerName, setNewCustomerName] = useState("");
@@ -192,6 +196,8 @@ export function ManualBookingForm({
             customerMode === "new"
               ? { name: newCustomerName.trim(), email: newCustomerEmail.trim(), phone: newCustomerPhone.trim() || undefined }
               : undefined,
+          source,
+          internalNotes: internalNotes.trim() || undefined,
         }),
       });
       const data = await response.json();
@@ -239,6 +245,21 @@ export function ManualBookingForm({
               </Select>
             </FormField>
           )}
+
+          <FormField label="Booking Source" htmlFor="source" required>
+            <Select value={source} onValueChange={(v) => setSource(v as BookingSource)}>
+              <SelectTrigger id="source">
+                <SelectValue placeholder="Choose a source" />
+              </SelectTrigger>
+              <SelectContent>
+                {BOOKING_SOURCES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {BOOKING_SOURCE_LABELS[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
 
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Check-in" htmlFor="checkIn" required>
@@ -466,6 +487,10 @@ export function ManualBookingForm({
                 </FormField>
               </div>
             )}
+
+            <FormField label="Notes" htmlFor="internalNotes" hint="Internal only — not shown to the guest" className="mt-3">
+              <Textarea id="internalNotes" value={internalNotes} onChange={(e) => setInternalNotes(e.target.value)} />
+            </FormField>
 
             <div className="mt-4 flex justify-between border-t border-border pt-3 text-base font-semibold text-foreground">
               <span>

@@ -27,7 +27,7 @@ interface SiteHeaderProps {
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
-  // { href: "/properties", label: "Properties" },
+  { href: "/properties", label: "Properties" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];

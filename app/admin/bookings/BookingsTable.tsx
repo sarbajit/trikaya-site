@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge, type AdminStatus } from "@/components/ui/status-badge";
+import { BOOKING_SOURCES, BOOKING_SOURCE_LABELS, type BookingSource } from "@/lib/constants/bookingSource";
 
 export interface BookingRow {
   id: string;
@@ -20,6 +23,9 @@ export interface BookingRow {
 }
 
 export function BookingsTable({ rows }: { rows: BookingRow[] }) {
+  const [sourceFilter, setSourceFilter] = useState<BookingSource | "all">("all");
+  const filteredRows = sourceFilter === "all" ? rows : rows.filter((row) => row.source === sourceFilter);
+
   const columns: DataTableColumn<BookingRow>[] = [
     {
       key: "guest",
@@ -68,8 +74,8 @@ export function BookingsTable({ rows }: { rows: BookingRow[] }) {
     {
       key: "source",
       header: "Source",
-      className: "text-sm text-muted-foreground capitalize",
-      render: (row) => row.source,
+      className: "text-sm text-muted-foreground",
+      render: (row) => BOOKING_SOURCE_LABELS[row.source as BookingSource] ?? row.source,
     },
     {
       key: "actions",
@@ -83,5 +89,24 @@ export function BookingsTable({ rows }: { rows: BookingRow[] }) {
     },
   ];
 
-  return <DataTable columns={columns} data={rows} rowKey={(row) => row.id} emptyMessage="No bookings yet." />;
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="w-48">
+        <Select value={sourceFilter} onValueChange={(v) => setSourceFilter(v as BookingSource | "all")}>
+          <SelectTrigger>
+            <SelectValue placeholder="All sources" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All sources</SelectItem>
+            {BOOKING_SOURCES.map((s) => (
+              <SelectItem key={s} value={s}>
+                {BOOKING_SOURCE_LABELS[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <DataTable columns={columns} data={filteredRows} rowKey={(row) => row.id} emptyMessage="No bookings match this filter." />
+    </div>
+  );
 }
