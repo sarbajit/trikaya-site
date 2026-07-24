@@ -44,4 +44,13 @@ body {
       transform: translateY(10px);
     }
   }
+
+  @keyframes hero-slide-progress {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
 }

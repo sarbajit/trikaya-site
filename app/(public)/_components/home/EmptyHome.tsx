@@ -1,21 +1,25 @@
 import Link from "next/link";
 import { Compass } from "lucide-react";
 import { getSiteSettings } from "@/models/SiteSettings";
-import { PropertyPhoto } from "../PropertyPhoto";
+import { HeroSlider } from "../HeroSlider";
 import { HERO_TEXT_STYLE } from "../hero-text-style";
 import { Button } from "@/components/ui/button";
 
 export async function EmptyHome() {
   const settings = await getSiteSettings();
+  const heroImages =
+    settings.heroImageUrls.length > 0
+      ? settings.heroImageUrls.map((image) => ({ url: image.url, alt: image.alt }))
+      : settings.heroImageUrl
+        ? [{ url: settings.heroImageUrl, alt: "" }]
+        : [null];
 
   return (
-    <section className="relative overflow-hidden">
-      <PropertyPhoto
-        image={settings.heroImageUrl ? { url: settings.heroImageUrl, alt: "" } : null}
-        seedKey={`${settings.companyName}-empty-hero`}
-        alt=""
-        className="h-[70vh] min-h-[420px] w-full"
-      />
+    <HeroSlider
+      images={heroImages}
+      seedKey={`${settings.companyName}-empty-hero`}
+      className="h-[calc(100vh-4rem)] min-h-[560px] w-full"
+    >
       <div className="absolute inset-0 bg-black/50" />
       <div className="absolute inset-0 flex items-center justify-center">
         <div
@@ -34,6 +38,6 @@ export async function EmptyHome() {
           </Button>
         </div>
       </div>
-    </section>
+    </HeroSlider>
   );
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { searchProperties, groupByDestination } from "@/lib/property-search";
 import { getSiteSettings } from "@/models/SiteSettings";
-import { PropertyPhoto } from "../PropertyPhoto";
+import { HeroSlider } from "../HeroSlider";
 import { HERO_TEXT_STYLE } from "../hero-text-style";
 import { PropertyCard } from "../PropertyCard";
 import { SectionDivider } from "../SectionDivider";
@@ -15,16 +15,20 @@ export async function PortfolioHome() {
   ]);
   const groups = groupByDestination(results);
   const destinations = Array.from(groups.keys());
+  const heroImages =
+    settings.heroImageUrls.length > 0
+      ? settings.heroImageUrls.map((image) => ({ url: image.url, alt: image.alt }))
+      : settings.heroImageUrl
+        ? [{ url: settings.heroImageUrl, alt: "" }]
+        : [null];
 
   return (
     <div>
-      <section className="relative overflow-hidden">
-        <PropertyPhoto
-          image={settings.heroImageUrl ? { url: settings.heroImageUrl, alt: "" } : null}
-          seedKey={`${settings.companyName}-portfolio-hero`}
-          alt=""
-          className="h-[52vh] min-h-[340px] w-full"
-        />
+      <HeroSlider
+        images={heroImages}
+        seedKey={`${settings.companyName}-portfolio-hero`}
+        className="h-[calc(100vh-4rem)] min-h-[560px] w-full"
+      >
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
         <div className="absolute inset-0 flex items-end">
           <div
@@ -48,7 +52,7 @@ export async function PortfolioHome() {
             </Button>
           </div>
         </div>
-      </section>
+      </HeroSlider>
 
       <div className="mx-auto max-w-6xl px-4 pt-10 sm:px-6">
         <SectionDivider seed={0} />

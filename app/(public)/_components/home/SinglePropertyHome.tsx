@@ -6,7 +6,7 @@ import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
 import { getSiteSettings } from "@/models/SiteSettings";
 import { HERO_TEXT_STYLE } from "../hero-text-style";
-import { PropertyPhoto } from "../PropertyPhoto";
+import { HeroSlider } from "../HeroSlider";
 import { PropertyGallery } from "../PropertyGallery";
 import { StarRating } from "../StarRating";
 import { AmenityIcon } from "../AmenityIcon";
@@ -26,25 +26,21 @@ export async function SinglePropertyHome() {
     RoomType.find({ propertyId: property._id }).lean(),
     getSiteSettings(),
   ]);
-  const heroImage = settings.heroImageUrl
-    ? { url: settings.heroImageUrl, alt: property.name }
-    : (property.images?.[0] ?? null);
+  const heroImages =
+    settings.heroImageUrls.length > 0
+      ? settings.heroImageUrls.map((image) => ({ url: image.url, alt: image.alt }))
+      : settings.heroImageUrl
+        ? [{ url: settings.heroImageUrl, alt: property.name }]
+        : property.images.length > 0
+          ? property.images
+          : [null];
 
   return (
     <div>
-      <section className="relative overflow-hidden">
-        <PropertyPhoto
-          image={heroImage}
-          seedKey={property.slug}
-          alt={property.name}
-          className="h-[70vh] min-h-[420px] w-full"
-        />
+      <HeroSlider images={heroImages} seedKey={property.slug} className="h-[calc(100vh-4rem)] min-h-[560px] w-full">
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
-        <div className="absolute inset-0 flex items-end">
-          <div
-            className="animate-fade-up mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6"
-            style={HERO_TEXT_STYLE}
-          >
+        <div className="absolute inset-0 flex items-center">
+          <div className="animate-fade-up mx-auto w-full max-w-6xl px-4 sm:px-6" style={HERO_TEXT_STYLE}>
             <span className="rounded-sm bg-white/90 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               {property.destination}
             </span>
@@ -64,17 +60,20 @@ export async function SinglePropertyHome() {
             </Button>
           </div>
         </div>
-      </section>
+      </HeroSlider>
 
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="flex flex-wrap gap-x-6 gap-y-3">
+      <div className="relative mx-auto -mt-12 mb-10 max-w-6xl px-4 sm:-mt-16 sm:mb-12 sm:px-6">
+        <div className="flex flex-wrap gap-x-3 gap-y-3 rounded-2xl border border-border bg-card/95 p-5 shadow-xl backdrop-blur-md sm:p-6 justify-center">
           {property.amenities.map((amenity) => (
-            <span key={amenity} className="flex items-center gap-2 text-sm text-foreground/80">
+            <span
+              key={amenity}
+              className="flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-sm text-foreground/80"
+            >
               <AmenityIcon label={amenity} className="size-4 text-primary" /> {amenity}
             </span>
           ))}
         </div>
-      </section>
+      </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionDivider seed={0} />

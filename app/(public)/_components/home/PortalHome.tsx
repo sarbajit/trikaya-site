@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MessageSquareHeart } from "lucide-react";
 import { searchProperties, getFilterOptions } from "@/lib/property-search";
 import { getSiteSettings } from "@/models/SiteSettings";
-import { PropertyPhoto } from "../PropertyPhoto";
+import { HeroSlider } from "../HeroSlider";
 import { HERO_TEXT_STYLE } from "../hero-text-style";
 import { PropertyCard } from "../PropertyCard";
 import { SearchFilterBar } from "../SearchFilterBar";
@@ -21,16 +21,20 @@ export async function PortalHome() {
   for (const property of results) {
     destinationCounts.set(property.destination, (destinationCounts.get(property.destination) ?? 0) + 1);
   }
+  const heroImages =
+    settings.heroImageUrls.length > 0
+      ? settings.heroImageUrls.map((image) => ({ url: image.url, alt: image.alt }))
+      : settings.heroImageUrl
+        ? [{ url: settings.heroImageUrl, alt: "" }]
+        : [null];
 
   return (
     <div>
-      <section className="relative overflow-hidden">
-        <PropertyPhoto
-          image={settings.heroImageUrl ? { url: settings.heroImageUrl, alt: "" } : null}
-          seedKey={`${settings.companyName}-portal-hero`}
-          alt=""
-          className="h-[46vh] min-h-[300px] w-full"
-        />
+      <HeroSlider
+        images={heroImages}
+        seedKey={`${settings.companyName}-portal-hero`}
+        className="h-[calc(100vh-4rem)] min-h-[560px] w-full"
+      >
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
         <div className="absolute inset-0 flex items-end">
           <div
@@ -45,7 +49,7 @@ export async function PortalHome() {
             </h1>
           </div>
         </div>
-      </section>
+      </HeroSlider>
 
       <div className="mx-auto -mt-8 max-w-6xl px-4 sm:px-6">
         <SearchFilterBar

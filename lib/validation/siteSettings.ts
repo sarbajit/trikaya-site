@@ -18,6 +18,9 @@ export const siteSettingsUpdateSchema = z.object({
   showCompanyName: z.boolean(),
   logoUrl: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   heroImageUrl: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
+  heroImageUrls: z
+    .array(z.object({ url: z.string().trim().url("Must be a valid URL"), alt: z.string().trim().min(1, "Alt text is required") }))
+    .default([]),
   primaryColor: hexColorSchema.optional(),
   secondaryColor: hexColorSchema.optional(),
   accentColor: hexColorSchema.optional(),

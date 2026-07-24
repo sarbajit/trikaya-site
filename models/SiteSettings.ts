@@ -15,6 +15,7 @@ export interface ISiteSettings extends Document {
   showCompanyName: boolean;
   logoUrl?: string;
   heroImageUrl?: string;
+  heroImageUrls: { url: string; alt: string }[];
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;
@@ -39,6 +40,10 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     showCompanyName: { type: Boolean, required: true, default: true },
     logoUrl: { type: String },
     heroImageUrl: { type: String },
+    heroImageUrls: {
+      type: [new Schema<{ url: string; alt: string }>({ url: String, alt: String }, { _id: false })],
+      default: [],
+    },
     primaryColor: { type: String },
     secondaryColor: { type: String },
     accentColor: { type: String },

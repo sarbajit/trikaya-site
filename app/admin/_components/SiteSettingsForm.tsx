@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { CloudinaryUploader } from "@/components/CloudinaryUploader";
+import { ImageGalleryUploader, type GalleryImage } from "@/components/ImageGalleryUploader";
 import { DynamicListField } from "./DynamicListField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ interface SiteSettingsData {
   showCompanyName: boolean;
   logoUrl?: string;
   heroImageUrl?: string;
+  heroImageUrls: GalleryImage[];
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;
@@ -135,15 +137,16 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
           <CardTitle>Homepage</CardTitle>
         </CardHeader>
         <CardContent>
-          <CloudinaryUploader
+          <ImageGalleryUploader
             folder="branding"
-            label="Homepage hero image"
-            value={form.heroImageUrl}
-            onChange={(url) => update("heroImageUrl", url)}
+            label="Homepage hero slider images"
+            altHint="Homepage hero"
+            images={form.heroImageUrls}
+            onChange={(images) => update("heroImageUrls", images)}
           />
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Shown at the top of the homepage. Not tied to any property&apos;s gallery — leave empty to fall back to
-            the default imagery.
+            Shown as a full-page slider at the top of the homepage, taking priority over any property photos. Leave
+            empty to fall back to a single-property home&apos;s own gallery, or to the default imagery otherwise.
           </p>
         </CardContent>
       </Card>
