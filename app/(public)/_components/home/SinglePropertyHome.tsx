@@ -46,7 +46,7 @@ export async function SinglePropertyHome() {
             </span>
             <h1 className="mt-2 font-display text-4xl text-foreground sm:text-5xl">{property.name}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <StarRating rating={property.starRating} />
+              <StarRating rating={property.googleRating} count={property.googleRatingCount} showValue />
               <span className="flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="size-3.5" /> {property.address}
               </span>

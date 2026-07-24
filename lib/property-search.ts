@@ -12,6 +12,8 @@ export interface PropertyListItem {
   propertyType: string;
   amenities: string[];
   starRating?: number;
+  googleRating?: number;
+  googleRatingCount?: number;
   minPriceB2C: number | null;
   maxOccupancy: number;
   heroImage: { url: string; alt: string } | null;
@@ -78,6 +80,8 @@ export async function searchProperties(filters: PropertySearchFilters = {}): Pro
       propertyType: property.propertyType,
       amenities: property.amenities,
       starRating: property.starRating,
+      googleRating: property.googleRating,
+      googleRatingCount: property.googleRatingCount,
       minPriceB2C: stats?.minPrice ?? null,
       maxOccupancy: stats?.maxOccupancy ?? 0,
       heroImage: property.images?.[0] ? { url: property.images[0].url, alt: property.images[0].alt } : null,

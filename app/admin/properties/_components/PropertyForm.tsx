@@ -28,6 +28,8 @@ export interface PropertyFormData {
   amenities: string[];
   images: GalleryImage[];
   starRating: string;
+  googlePlaceId: string;
+  googleRating: string;
   checkIn: string;
   checkOut: string;
   houseRules: string;
@@ -39,6 +41,9 @@ export interface PropertyFormData {
 interface PropertyFormProps {
   initialData?: PropertyFormData;
   propertyId?: string;
+  googlePlacesConfigured?: boolean;
+  googleRatingCount?: number;
+  googleRatingUpdatedAt?: string;
 }
 
 export const EMPTY_PROPERTY_FORM: PropertyFormData = {
@@ -53,6 +58,8 @@ export const EMPTY_PROPERTY_FORM: PropertyFormData = {
   amenities: [],
   images: [],
   starRating: "",
+  googlePlaceId: "",
+  googleRating: "",
   checkIn: "",
   checkOut: "",
   houseRules: "",
@@ -61,14 +68,40 @@ export const EMPTY_PROPERTY_FORM: PropertyFormData = {
   homepageMode: "auto",
 };
 
-export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
+export function PropertyForm({
+  initialData,
+  propertyId,
+  googlePlacesConfigured = false,
+  googleRatingCount,
+  googleRatingUpdatedAt,
+}: PropertyFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const isEdit = Boolean(propertyId);
   const [form, setForm] = useState<PropertyFormData>(initialData ?? EMPTY_PROPERTY_FORM);
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRefreshingRating, setIsRefreshingRating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]> | null>(null);
+
+  async function handleRefreshRating() {
+    if (!propertyId) return;
+    setIsRefreshingRating(true);
+    try {
+      const response = await fetch(`/api/admin/properties/${propertyId}/refresh-google-rating`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        toast({ title: body?.error ?? "Failed to refresh Google rating", variant: "destructive" });
+        return;
+      }
+      toast({ title: "Google rating refreshed.", variant: "success" });
+      router.refresh();
+    } finally {
+      setIsRefreshingRating(false);
+    }
+  }
 
   function update<K extends keyof PropertyFormData>(key: K, value: PropertyFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -100,6 +133,10 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
       amenities: form.amenities.filter((item) => item.trim().length > 0),
       images: form.images,
       starRating: form.starRating.trim() ? Number(form.starRating) : undefined,
+      googlePlaceId: form.googlePlaceId.trim() || undefined,
+      // Only sent in manual mode — in auto mode the rating is system-written
+      // by the refresh routes, never by this form.
+      googleRating: !googlePlacesConfigured && form.googleRating.trim() ? Number(form.googleRating) : undefined,
       policies: {
         checkIn: form.checkIn || undefined,
         checkOut: form.checkOut || undefined,
@@ -185,7 +222,75 @@ export function PropertyForm({ initialData, propertyId }: PropertyFormProps) {
               onChange={(e) => update("starRating", e.target.value)}
               className="w-24"
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Internal classification only — the public site shows the Google rating below instead.
+            </p>
           </FormField>
+          {googlePlacesConfigured ? (
+            <FormField label="Google Place ID" htmlFor="googlePlaceId" error={errors?.googlePlaceId}>
+              <Input
+                id="googlePlaceId"
+                value={form.googlePlaceId}
+                onChange={(e) => update("googlePlaceId", e.target.value)}
+                placeholder="e.g. ChIJN1t_tDeuEmsRUsoyG83frY4"
+                className="w-full max-w-sm"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Find this property&apos;s ID with Google&apos;s{" "}
+                <a
+                  href="https://developers.google.com/maps/documentation/places/web-service/place-id"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline"
+                >
+                  Place ID Finder
+                </a>
+                . Drives the Google rating shown publicly; refreshed automatically once a day.
+              </p>
+              {isEdit && (
+                <div className="mt-2 flex items-center gap-3 text-sm">
+                  {form.googleRating.trim() ? (
+                    <span className="text-muted-foreground">
+                      Current: <span className="font-medium text-foreground">{Number(form.googleRating).toFixed(1)}</span> ★
+                      {googleRatingCount != null ? ` (${googleRatingCount} reviews)` : ""}
+                      {googleRatingUpdatedAt
+                        ? ` · updated ${new Date(googleRatingUpdatedAt).toLocaleString()}`
+                        : ""}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">No Google rating fetched yet.</span>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isRefreshingRating || !form.googlePlaceId.trim()}
+                    onClick={handleRefreshRating}
+                  >
+                    {isRefreshingRating ? "Refreshing..." : "Refresh now"}
+                  </Button>
+                </div>
+              )}
+            </FormField>
+          ) : (
+            <FormField label="Google rating (0-5)" htmlFor="googleRating" error={errors?.googleRating}>
+              <Input
+                id="googleRating"
+                type="number"
+                step={0.1}
+                min={0}
+                max={5}
+                value={form.googleRating}
+                onChange={(e) => update("googleRating", e.target.value)}
+                placeholder="e.g. 4.7"
+                className="w-24"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Manual mode — GOOGLE_PLACES_API_KEY isn&apos;t configured, so type the property&apos;s current
+                Google rating here (check Google Maps). It won&apos;t update automatically; revisit it periodically.
+              </p>
+            </FormField>
+          )}
           <div className="flex items-center gap-2">
             <Switch id="isActive" checked={form.isActive} onCheckedChange={(v) => update("isActive", v)} />
             <Label htmlFor="isActive">Active (visible on the public site)</Label>

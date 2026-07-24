@@ -27,6 +27,10 @@ export interface IProperty extends Document {
   amenities: string[];
   images: IImage[];
   starRating?: number;
+  googlePlaceId?: string;
+  googleRating?: number;
+  googleRatingCount?: number;
+  googleRatingUpdatedAt?: Date;
   policies?: IPropertyPolicies;
   isActive: boolean;
   homepageMode: HomepageMode;
@@ -57,6 +61,10 @@ const PropertySchema = new Schema<IProperty>(
     amenities: { type: [String], default: [] },
     images: { type: [ImageSchema], default: [] },
     starRating: { type: Number, min: 1, max: 5 },
+    googlePlaceId: { type: String, trim: true },
+    googleRating: { type: Number, min: 0, max: 5 },
+    googleRatingCount: { type: Number, min: 0 },
+    googleRatingUpdatedAt: { type: Date },
     policies: {
       type: new Schema<IPropertyPolicies>(
         {

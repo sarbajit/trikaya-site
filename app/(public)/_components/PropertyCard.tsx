@@ -31,7 +31,7 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
           <Badge variant="outline">{PROPERTY_TYPE_LABEL[property.propertyType] ?? property.propertyType}</Badge>
         </div>
         <h3 className="font-display text-lg leading-tight text-foreground">{property.name}</h3>
-        <StarRating rating={property.starRating} />
+        <StarRating rating={property.googleRating} count={property.googleRatingCount} showValue />
         <div className="mt-auto flex items-center justify-between pt-2 text-sm">
           <span className="flex items-center gap-1 text-muted-foreground">
             <Users className="size-3.5" /> Up to {property.maxOccupancy || "—"}

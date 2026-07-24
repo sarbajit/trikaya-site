@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
+import { isGooglePlacesConfigured } from "@/lib/google-places";
 import { Property } from "@/models/Property";
 import { RoomType } from "@/models/RoomType";
 import { PropertyForm, type PropertyFormData } from "../../_components/PropertyForm";
@@ -36,6 +37,8 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ i
     amenities: [...property.amenities],
     images: property.images.map((image) => ({ url: image.url, alt: image.alt })),
     starRating: property.starRating ? String(property.starRating) : "",
+    googlePlaceId: property.googlePlaceId ?? "",
+    googleRating: property.googleRating != null ? String(property.googleRating) : "",
     checkIn: property.policies?.checkIn ?? "",
     checkOut: property.policies?.checkOut ?? "",
     houseRules: property.policies?.houseRules ?? "",
@@ -47,7 +50,13 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ i
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title={`Edit ${property.name}`} />
-      <PropertyForm initialData={initialData} propertyId={property._id.toString()} />
+      <PropertyForm
+        initialData={initialData}
+        propertyId={property._id.toString()}
+        googlePlacesConfigured={isGooglePlacesConfigured()}
+        googleRatingCount={property.googleRatingCount}
+        googleRatingUpdatedAt={property.googleRatingUpdatedAt?.toISOString()}
+      />
       <RoomTypesSection propertyId={property._id.toString()} initialRoomTypes={initialRoomTypes} />
     </div>
   );

@@ -54,10 +54,10 @@ export function SiteHeader({ companyName, showCompanyName, logoUrl, isLoggedIn, 
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
           {logoUrl && (
-            <Image src={logoUrl} alt={companyName} width={32} height={32} className="rounded-sm" />
+            <Image src={logoUrl} alt={companyName} width={46} height={46} className="rounded-sm" />
           )}
           {showCompanyName && (
-            <span className="font-display text-xl tracking-tight text-foreground">{companyName}</span>
+            <span className="font-display text-2xl tracking-tight text-foreground">{companyName}</span>
           )}
         </Link>
 

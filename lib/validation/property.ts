@@ -32,6 +32,10 @@ export const propertySchema = z.object({
   amenities: z.array(z.string().trim().min(1)).default([]),
   images: z.array(imageSchema).default([]),
   starRating: z.number().int().min(1).max(5).optional(),
+  googlePlaceId: z.string().trim().optional(),
+  // Only used in "manual mode" (GOOGLE_PLACES_API_KEY unset) — admin types the
+  // rating directly instead of it being fetched from Google Places.
+  googleRating: z.number().min(0).max(5).optional(),
   policies: policiesSchema.optional(),
   isActive: z.boolean().default(true),
   homepageMode: z.enum(["auto", "single", "portfolio", "portal"]).default("auto"),

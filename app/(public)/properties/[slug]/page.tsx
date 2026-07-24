@@ -72,7 +72,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           <Badge variant="outline">{PROPERTY_TYPE_LABEL[property.propertyType] ?? property.propertyType}</Badge>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-4">
-          <StarRating rating={property.starRating} />
+          <StarRating rating={property.googleRating} count={property.googleRatingCount} showValue />
           <span className="flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin className="size-3.5" /> {property.address}
           </span>
