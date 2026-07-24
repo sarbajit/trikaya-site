@@ -21,6 +21,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <main className="flex-1">{children}</main>
       <SiteFooter
         companyName={settings.companyName || "Trikaya"}
+        logoUrl={settings.logoUrl}
         addresses={settings.addresses}
         phones={settings.phones}
         emails={settings.emails}

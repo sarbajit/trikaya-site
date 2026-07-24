@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Instagram, Facebook, Twitter, Youtube, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -9,6 +10,7 @@ interface SocialLink {
 
 interface SiteFooterProps {
   companyName: string;
+  logoUrl?: string;
   addresses: string[];
   phones: string[];
   emails: string[];
@@ -23,13 +25,18 @@ const SOCIAL_ICONS: Record<string, LucideIcon> = {
   linkedin: Linkedin,
 };
 
-export function SiteFooter({ companyName, addresses, phones, emails, socialLinks }: SiteFooterProps) {
+export function SiteFooter({ companyName, logoUrl, addresses, phones, emails, socialLinks }: SiteFooterProps) {
   return (
     <footer className="border-t border-primary-foreground/10 bg-primary">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-display text-lg text-primary-foreground">{companyName}</p>
+            <div className="flex items-center gap-2">
+              {logoUrl && (
+                <Image src={logoUrl} alt={companyName} width={36} height={36} className="rounded-sm" />
+              )}
+              <p className="font-display text-lg text-primary-foreground">{companyName}</p>
+            </div>
             <p className="mt-2 max-w-xs text-sm text-primary-foreground/70">
               Boutique hotels, resorts, and homestays across the Eastern Himalaya and Northeast India.
             </p>
