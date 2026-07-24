@@ -29,7 +29,7 @@ export function LeafletMap({
       center={[geo.lat, geo.lng]}
       zoom={15}
       scrollWheelZoom={false}
-      className="h-56 w-full sm:h-72"
+      className="isolate z-0 h-56 w-full sm:h-72"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
