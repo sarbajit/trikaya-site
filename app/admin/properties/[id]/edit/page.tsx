@@ -42,7 +42,6 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ i
     checkIn: property.policies?.checkIn ?? "",
     checkOut: property.policies?.checkOut ?? "",
     houseRules: property.policies?.houseRules ?? "",
-    cancellationPolicy: property.policies?.cancellationPolicy ?? "",
     isActive: property.isActive,
     homepageMode: property.homepageMode,
   };

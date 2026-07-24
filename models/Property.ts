@@ -12,7 +12,6 @@ export interface IPropertyPolicies {
   checkIn?: string;
   checkOut?: string;
   houseRules?: string;
-  cancellationPolicy?: string;
 }
 
 export interface IProperty extends Document {
@@ -71,7 +70,6 @@ const PropertySchema = new Schema<IProperty>(
           checkIn: String,
           checkOut: String,
           houseRules: String,
-          cancellationPolicy: String,
         },
         { _id: false }
       ),

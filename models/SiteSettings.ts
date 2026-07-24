@@ -24,6 +24,7 @@ export interface ISiteSettings extends Document {
   emails: string[];
   socialLinks: ISocialLink[];
   contactRecipientEmail: string;
+  whatsappNumber?: string;
   b2bEnabled: boolean;
   bookingEnabled: boolean;
   invoicePrefix: string;
@@ -55,6 +56,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
       default: [],
     },
     contactRecipientEmail: { type: String, required: true },
+    whatsappNumber: { type: String },
     b2bEnabled: { type: Boolean, required: true, default: false },
     bookingEnabled: { type: Boolean, required: true, default: true },
     invoicePrefix: { type: String, required: true, default: "INV-" },

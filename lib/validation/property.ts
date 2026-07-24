@@ -11,7 +11,6 @@ const policiesSchema = z.object({
   checkIn: z.string().trim().optional(),
   checkOut: z.string().trim().optional(),
   houseRules: z.string().trim().optional(),
-  cancellationPolicy: z.string().trim().optional(),
 });
 
 export const propertySchema = z.object({

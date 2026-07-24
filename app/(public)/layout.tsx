@@ -3,6 +3,7 @@ import { getSiteSettings } from "@/models/SiteSettings";
 import { auth } from "@/lib/auth";
 import { SiteHeader } from "./_components/SiteHeader";
 import { SiteFooter } from "./_components/SiteFooter";
+import { WhatsAppFloater } from "./_components/WhatsAppFloater";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   await connectDB();
@@ -25,6 +26,7 @@ export default async function PublicLayout({ children }: { children: React.React
         emails={settings.emails}
         socialLinks={settings.socialLinks}
       />
+      <WhatsAppFloater whatsappNumber={settings.whatsappNumber} />
     </div>
   );
 }

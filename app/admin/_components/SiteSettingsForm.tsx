@@ -33,6 +33,7 @@ interface SiteSettingsData {
   emails: string[];
   socialLinks: SocialLink[];
   contactRecipientEmail: string;
+  whatsappNumber: string;
   b2bEnabled: boolean;
   bookingEnabled: boolean;
   invoicePrefix: string;
@@ -241,6 +242,28 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
               value={form.contactRecipientEmail}
               onChange={(e) => update("contactRecipientEmail", e.target.value)}
               required
+            />
+          </FormField>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>WhatsApp</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FormField
+            label="WhatsApp number"
+            htmlFor="whatsappNumber"
+            error={errors?.whatsappNumber}
+            hint="Digits only, with country code, no + sign (e.g. 919876543210). Leave empty to hide the WhatsApp button on the site."
+          >
+            <Input
+              id="whatsappNumber"
+              type="tel"
+              value={form.whatsappNumber}
+              onChange={(e) => update("whatsappNumber", e.target.value)}
+              className="w-60"
             />
           </FormField>
         </CardContent>

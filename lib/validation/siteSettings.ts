@@ -29,6 +29,12 @@ export const siteSettingsUpdateSchema = z.object({
   emails: z.array(z.string().trim().email("Must be a valid email")).default([]),
   socialLinks: z.array(socialLinkSchema).default([]),
   contactRecipientEmail: z.string().trim().email("Must be a valid email"),
+  whatsappNumber: z
+    .string()
+    .trim()
+    .regex(/^[1-9]\d{6,14}$/, "Digits only, with country code, no + or leading zero")
+    .optional()
+    .or(z.literal("")),
   b2bEnabled: z.boolean(),
   bookingEnabled: z.boolean(),
   invoicePrefix: z.string().trim().min(1, "Invoice prefix is required"),

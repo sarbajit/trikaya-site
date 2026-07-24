@@ -33,7 +33,6 @@ export interface PropertyFormData {
   checkIn: string;
   checkOut: string;
   houseRules: string;
-  cancellationPolicy: string;
   isActive: boolean;
   homepageMode: "auto" | "single" | "portfolio" | "portal";
 }
@@ -63,7 +62,6 @@ export const EMPTY_PROPERTY_FORM: PropertyFormData = {
   checkIn: "",
   checkOut: "",
   houseRules: "",
-  cancellationPolicy: "",
   isActive: true,
   homepageMode: "auto",
 };
@@ -141,7 +139,6 @@ export function PropertyForm({
         checkIn: form.checkIn || undefined,
         checkOut: form.checkOut || undefined,
         houseRules: form.houseRules || undefined,
-        cancellationPolicy: form.cancellationPolicy || undefined,
       },
       isActive: form.isActive,
       homepageMode: form.homepageMode,
@@ -377,9 +374,6 @@ export function PropertyForm({
           </div>
           <FormField label="House rules">
             <RichTextEditor value={form.houseRules} onChange={(html) => update("houseRules", html)} />
-          </FormField>
-          <FormField label="Cancellation policy">
-            <RichTextEditor value={form.cancellationPolicy} onChange={(html) => update("cancellationPolicy", html)} />
           </FormField>
         </CardContent>
       </Card>

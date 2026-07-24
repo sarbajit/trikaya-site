@@ -21,6 +21,7 @@ export default async function AdminSettingsPage() {
     emails: [...settings.emails],
     socialLinks: settings.socialLinks.map((link) => ({ platform: link.platform, url: link.url })),
     contactRecipientEmail: settings.contactRecipientEmail,
+    whatsappNumber: settings.whatsappNumber ?? "",
     b2bEnabled: settings.b2bEnabled,
     bookingEnabled: settings.bookingEnabled,
     invoicePrefix: settings.invoicePrefix,
