@@ -14,6 +14,7 @@ const markerIcon = L.divIcon({
   popupAnchor: [0, -32],
 });
 
+
 export function LeafletMap({
   address,
   geo,
