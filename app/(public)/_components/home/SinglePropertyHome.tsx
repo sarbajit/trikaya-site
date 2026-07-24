@@ -12,7 +12,7 @@ import { StarRating } from "../StarRating";
 import { AmenityIcon } from "../AmenityIcon";
 import { RoomTypeCard } from "../RoomTypeCard";
 import { PoliciesSection } from "../PoliciesSection";
-import { MapPlaceholder } from "../MapPlaceholder";
+import { PropertyMap } from "../PropertyMap";
 import { ReviewsSection } from "../ReviewsSection";
 import { SectionDivider } from "../SectionDivider";
 import { Button } from "@/components/ui/button";
@@ -121,7 +121,12 @@ export async function SinglePropertyHome() {
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <h2 className="font-display text-2xl text-foreground">Location</h2>
         <div className="mt-5">
-          <MapPlaceholder address={property.address} seedKey={property.slug} />
+          <PropertyMap
+            address={property.address}
+            geo={property.geo}
+            seedKey={property.slug}
+            googlePlaceId={property.googlePlaceId}
+          />
         </div>
       </section>
 

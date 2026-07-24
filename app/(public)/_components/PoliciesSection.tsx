@@ -26,7 +26,7 @@ export function PoliciesSection({ policies }: { policies?: Policies }) {
       </div>
       <div className="rounded-md border border-border bg-card p-4">
         <ScrollText className="size-4 text-primary" aria-hidden />
-        <p className="mt-2 text-sm font-semibold text-foreground">House rules</p>
+        <p className="mt-2 text-lg font-semibold text-foreground">House rules</p>
         <div
           className={cn(RICH_TEXT_CLASS, "mt-1 text-sm text-muted-foreground")}
           dangerouslySetInnerHTML={{

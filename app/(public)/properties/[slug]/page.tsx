@@ -14,7 +14,7 @@ import { StarRating } from "../../_components/StarRating";
 import { AmenityIcon } from "../../_components/AmenityIcon";
 import { RoomTypeCard } from "../../_components/RoomTypeCard";
 import { PoliciesSection } from "../../_components/PoliciesSection";
-import { MapPlaceholder } from "../../_components/MapPlaceholder";
+import { PropertyMap } from "../../_components/PropertyMap";
 import { ReviewsSection } from "../../_components/ReviewsSection";
 import { SectionDivider } from "../../_components/SectionDivider";
 import { Suspense } from "react";
@@ -135,7 +135,12 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           <section>
             <h2 className="font-display text-2xl text-foreground">Location</h2>
             <div className="mt-5">
-              <MapPlaceholder address={property.address} seedKey={property.slug} />
+              <PropertyMap
+                address={property.address}
+                geo={property.geo}
+                seedKey={property.slug}
+                googlePlaceId={property.googlePlaceId}
+              />
             </div>
           </section>
 
