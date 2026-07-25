@@ -13,7 +13,7 @@ import { AmenityIcon } from "../AmenityIcon";
 import { RoomTypeCard } from "../RoomTypeCard";
 import { PoliciesSection } from "../PoliciesSection";
 import { PropertyMap } from "../PropertyMap";
-import { ReviewsSection } from "../ReviewsSection";
+import { GoogleReviewsSection } from "../GoogleReviewsSection";
 import { SectionDivider } from "../SectionDivider";
 import { Button } from "@/components/ui/button";
 
@@ -133,7 +133,7 @@ export async function SinglePropertyHome() {
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <h2 className="font-display text-2xl text-foreground">Guest reviews</h2>
         <div className="mt-5">
-          <ReviewsSection propertyId={property._id.toString()} />
+          <GoogleReviewsSection reviews={property.googleReviews} googlePlaceId={property.googlePlaceId} />
         </div>
       </section>
     </div>

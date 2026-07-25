@@ -15,7 +15,7 @@ import { AmenityIcon } from "../../_components/AmenityIcon";
 import { RoomTypeCard } from "../../_components/RoomTypeCard";
 import { PoliciesSection } from "../../_components/PoliciesSection";
 import { PropertyMap } from "../../_components/PropertyMap";
-import { ReviewsSection } from "../../_components/ReviewsSection";
+import { GoogleReviewsSection } from "../../_components/GoogleReviewsSection";
 import { SectionDivider } from "../../_components/SectionDivider";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -147,7 +147,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           <section>
             <h2 className="font-display text-2xl text-foreground">Guest reviews</h2>
             <div className="mt-5">
-              <ReviewsSection propertyId={property._id.toString()} />
+              <GoogleReviewsSection reviews={property.googleReviews} googlePlaceId={property.googlePlaceId} />
             </div>
           </section>
         </div>

@@ -1,6 +1,16 @@
+export interface GooglePlaceReview {
+  authorName: string;
+  authorPhotoUrl?: string;
+  rating: number;
+  text: string;
+  relativeTime: string;
+  publishTime: string;
+}
+
 export interface PlaceRating {
   rating: number;
   userRatingCount: number;
+  reviews: GooglePlaceReview[];
 }
 
 /**
@@ -21,8 +31,9 @@ function getApiKey(): string {
 }
 
 /**
- * Fetches the live rating for a Google Place via Places API (New) Place
- * Details. Returns null (rather than throwing) for a bad/deleted place ID or
+ * Fetches the live rating + top reviews for a Google Place via Places API
+ * (New) Place Details, in a single call (Google caps reviews at 5 per
+ * place). Returns null (rather than throwing) for a bad/deleted place ID or
  * any non-2xx response, so one broken property doesn't abort a batch refresh.
  */
 export async function fetchPlaceRating(placeId: string): Promise<PlaceRating | null> {
@@ -31,7 +42,7 @@ export async function fetchPlaceRating(placeId: string): Promise<PlaceRating | n
   const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
     headers: {
       "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": "rating,userRatingCount",
+      "X-Goog-FieldMask": "rating,userRatingCount,reviews",
     },
   });
 
@@ -43,5 +54,20 @@ export async function fetchPlaceRating(placeId: string): Promise<PlaceRating | n
   const data = await response.json();
   if (typeof data.rating !== "number") return null;
 
-  return { rating: data.rating, userRatingCount: data.userRatingCount ?? 0 };
+  const reviews: GooglePlaceReview[] = Array.isArray(data.reviews)
+    ? data.reviews.map((review: Record<string, unknown>) => {
+        const authorAttribution = (review.authorAttribution ?? {}) as Record<string, unknown>;
+        const text = (review.text ?? review.originalText ?? {}) as Record<string, unknown>;
+        return {
+          authorName: (authorAttribution.displayName as string | undefined) ?? "Google user",
+          authorPhotoUrl: authorAttribution.photoUri as string | undefined,
+          rating: (review.rating as number | undefined) ?? 0,
+          text: (text.text as string | undefined) ?? "",
+          relativeTime: (review.relativePublishTimeDescription as string | undefined) ?? "",
+          publishTime: (review.publishTime as string | undefined) ?? new Date().toISOString(),
+        };
+      })
+    : [];
+
+  return { rating: data.rating, userRatingCount: data.userRatingCount ?? 0, reviews };
 }

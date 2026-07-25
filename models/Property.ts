@@ -14,6 +14,15 @@ export interface IPropertyPolicies {
   houseRules?: string;
 }
 
+export interface IGoogleReview {
+  authorName: string;
+  authorPhotoUrl?: string;
+  rating: number;
+  text: string;
+  relativeTime: string;
+  publishTime: Date;
+}
+
 export interface IProperty extends Document {
   _id: Types.ObjectId;
   name: string;
@@ -30,6 +39,8 @@ export interface IProperty extends Document {
   googleRating?: number;
   googleRatingCount?: number;
   googleRatingUpdatedAt?: Date;
+  googleReviews?: IGoogleReview[];
+  googleReviewsUpdatedAt?: Date;
   policies?: IPropertyPolicies;
   isActive: boolean;
   homepageMode: HomepageMode;
@@ -41,6 +52,18 @@ const ImageSchema = new Schema<IImage>(
   {
     url: { type: String, required: true },
     alt: { type: String, required: true },
+  },
+  { _id: false }
+);
+
+const GoogleReviewSchema = new Schema<IGoogleReview>(
+  {
+    authorName: { type: String, required: true },
+    authorPhotoUrl: { type: String },
+    rating: { type: Number, required: true, min: 0, max: 5 },
+    text: { type: String, required: true },
+    relativeTime: { type: String, required: true },
+    publishTime: { type: Date, required: true },
   },
   { _id: false }
 );
@@ -64,6 +87,8 @@ const PropertySchema = new Schema<IProperty>(
     googleRating: { type: Number, min: 0, max: 5 },
     googleRatingCount: { type: Number, min: 0 },
     googleRatingUpdatedAt: { type: Date },
+    googleReviews: { type: [GoogleReviewSchema], default: [] },
+    googleReviewsUpdatedAt: { type: Date },
     policies: {
       type: new Schema<IPropertyPolicies>(
         {
