@@ -85,7 +85,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
       <BookingCartProvider>
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_20rem]">
-        <div className="flex flex-col gap-10">
+        <div className="flex min-w-0 flex-col gap-10">
           <section>
             <h2 className="font-display text-2xl text-foreground">About this stay</h2>
             <div
